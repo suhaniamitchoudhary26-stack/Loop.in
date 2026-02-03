@@ -63,3 +63,7 @@ To set up your development environment, please follow the [Installation Instruct
 - Reference issues and pull requests liberally after the first line
 
 Thank you for contributing!
+
+
+
+(MEET , SUHANI , PRANSHU -> DAY 2 Discussuions -> features like ( feed up ) two users together deployment and loghin authentication , deartmnet name with different  font coloue and enrollment number visible )
