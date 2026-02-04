@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_ID: str = ""
     GOOGLE_CLIENT_SECRET: str = ""
     GOOGLE_REDIRECT_URI: str = "http://localhost:3000/auth/callback"
+    
+    # Firebase
+    FIREBASE_CREDENTIALS_JSON: str | None = None
 
     class Config:
         case_sensitive = True

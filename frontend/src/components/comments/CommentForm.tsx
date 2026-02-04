@@ -36,7 +36,7 @@ export default function CommentForm({ onSubmit, placeholder = "Write a thoughtfu
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                     placeholder={placeholder}
-                    className="w-full p-3 border border-slate-200 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm min-h-[80px] resize-y text-slate-900 bg-white placeholder:text-slate-400"
+                    className="w-full p-3 border border-slate-200 dark:border-slate-800 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm min-h-[80px] resize-y text-slate-900 bg-white dark:bg-slate-900 dark:text-white placeholder:text-slate-400"
                     autoFocus={autoFocus}
                 />
                 <div className="flex justify-end gap-2">

@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import MagneticButton from '@/components/common/MagneticButton';
+import { auth, googleProvider } from '@/lib/firebase';
+import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile as updateFirebaseProfile } from 'firebase/auth';
+import { updateProfile } from '@/lib/api';
 
 export default function LoginPage() {
     const [isRegister, setIsRegister] = useState(false);
@@ -21,11 +23,12 @@ export default function LoginPage() {
         setGoogleLoading(true);
         setError('');
         try {
-            const { data } = await api.get('/auth/google/url');
-            // Redirect to Google's OAuth page
-            window.location.href = data.url;
+            await signInWithPopup(auth, googleProvider);
+            // AuthContext detects change -> calls API -> Backend Lazy Creates User -> Redirects
+            router.push('/');
         } catch (err: any) {
-            setError('Could not initiate Google login. Please try again.');
+            console.error("Google Login Error:", err);
+            setError(err.message || 'Google login failed.');
             setGoogleLoading(false);
         }
     };
@@ -35,22 +38,49 @@ export default function LoginPage() {
         setError('');
         setLoading(true);
 
-        const endpoint = isRegister ? '/auth/register' : '/auth/login';
-        const payload = isRegister
-            ? { email, password, enrollment_number: enrollment, username }
-            : { email, password };
-
         try {
-            const { data } = await api.post(endpoint, payload);
-            localStorage.setItem('token', data.access_token);
+            if (isRegister) {
+                // 1. Create Firebase User
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
+                // 2. Update Firebase Profile (Display Name)
+                if (username) {
+                    await updateFirebaseProfile(userCredential.user, {
+                        displayName: username
+                    });
+                }
+
+                // 3. Update Backend Profile with extra fields (Enrollment, Username)
+                // Note: AuthContext will pick up the new user immediately. 
+                // We rely on the fact that `api.put` will wait for the token to be ready.
+                // However, we need to be careful about race conditions with AuthContext lazy-creation.
+                // Best approach: Wait a moment for token propagation or handle gracefully.
+
+                // Construct profile data
+                const profileData: any = { username };
+                if (enrollment) profileData.enrollment_number = enrollment;
+
+                // Call backend to sync/update profile
+                try {
+                    await updateProfile(profileData);
+                } catch (updateErr) {
+                    console.warn("Profile sync failed, user created but fields missing:", updateErr);
+                }
+
+            } else {
+                // Login
+                await signInWithEmailAndPassword(auth, email, password);
+            }
             router.push('/');
         } catch (err: any) {
-            if (err.response) {
-                setError(err.response.data.detail || 'Authentication failed');
+            console.error("Auth Error:", err);
+            if (err.code === 'auth/email-already-in-use') {
+                setError('Email is already registered. Please login.');
+            } else if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+                setError('Invalid email or password.');
             } else {
-                setError('Network error. Is the backend running?');
+                setError(err.message || 'Authentication failed.');
             }
-        } finally {
             setLoading(false);
         }
     };

@@ -7,14 +7,39 @@ import DepartmentBadge from '@/components/feed/DepartmentBadge';
 import CommentSection from '@/components/comments/CommentSection';
 import ReactionPicker from '@/components/common/ReactionPicker';
 import TruncatedText from '@/components/common/TruncatedText';
+import PinDialog from '@/components/admin/PinDialog';
+import { pinPost } from '@/lib/api';
+import { useState, useEffect } from 'react';
+import { useToast } from '@/context/ToastContext';
 
 interface PostCardProps {
     post: Post;
     currentUserId: number | null;
+    currentUser?: any; // Full user object for admin checks
     onDelete?: (postId: number) => void;
 }
 
-export default function PostCard({ post, currentUserId, onDelete }: PostCardProps) {
+export default function PostCard({ post, currentUserId, currentUser, onDelete }: PostCardProps) {
+    const { showToast } = useToast();
+    const [isPinDialogOpen, setIsPinDialogOpen] = useState(false);
+    const [isPinning, setIsPinning] = useState(false);
+
+    const handlePinConfirm = async (duration: string) => {
+        setIsPinning(true);
+        try {
+            await pinPost(post.id, duration);
+            showToast(`Post pinned for ${duration === 'infinite' ? 'Eternity' : duration}`, "success");
+            setIsPinDialogOpen(false);
+            // Ideally, we'd update the local post state or re-fetch, but layout animation handles reorder
+            window.location.reload(); // Simple reload to refresh order for now
+        } catch (error) {
+            console.error(error);
+            showToast("Failed to pin post", "error");
+        } finally {
+            setIsPinning(false);
+        }
+    };
+
     // Department Color Map
     const deptColors: Record<string, string> = {
         'CS': '0, 255, 255', // Cyan
@@ -26,11 +51,26 @@ export default function PostCard({ post, currentUserId, onDelete }: PostCardProp
     };
     const deptColor = deptColors[post.department || 'GENERAL'] || deptColors['GENERAL'];
 
-    const isAuthor = currentUserId && post.author_id === currentUserId;
+    const isAdmin = currentUser?.role === 'admin';
+    // Admin Override: If admin, they can clean up anything
+    const canDelete = (currentUserId && post.author_id === currentUserId) || isAdmin;
+
     const isAnonymous = post.is_anonymous;
-    const authorName = isAnonymous ? 'Anonymous Student' : (post.author?.full_name || post.author?.email?.split('@')[0] || 'Student');
-    const authorUsername = isAnonymous ? '' : (post.author?.username || '');
-    const authorRole = isAnonymous ? 'Ghost' : (post.author?.role || 'Student');
+
+    // Antigravity Unmasking Logic
+    // If Admin, and author data is present (backend sent it), show it with indicator.
+    const isUnmasked = isAnonymous && isAdmin && post.author;
+
+    let authorName = isAnonymous ? 'Anonymous Student' : (post.author?.full_name || post.author?.email?.split('@')[0] || 'Student');
+    let authorUsername = isAnonymous ? '' : (post.author?.username || '');
+    let authorRole = isAnonymous ? 'Ghost' : (post.author?.role || 'Student');
+
+    if (isUnmasked) {
+        authorName = `${post.author?.full_name} (Ghost)`;
+        authorUsername = post.author?.username || '';
+        authorRole = "Unmasked";
+    }
+
     const timeAgo = new Date(post.created_at).toLocaleDateString();
 
     return (
@@ -41,7 +81,7 @@ export default function PostCard({ post, currentUserId, onDelete }: PostCardProp
             exit={{ opacity: 0, scale: 0.9 }}
             whileHover={{ y: -6, scale: 1.01 }}
             transition={{ type: "spring", stiffness: 100, damping: 15 }}
-            className="relative bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl p-6 md:p-8 rounded-3xl border border-white/40 dark:border-white/5 transition-all duration-300 group"
+            className={`relative bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl p-6 md:p-8 rounded-3xl border transition-all duration-300 group ${isUnmasked ? 'border-red-500/30' : 'border-white/40 dark:border-white/5'}`}
             style={{
                 boxShadow: `0 0 0 1px rgba(255,255,255,0.1), 0 8px 30px -6px rgba(0,0,0,0.1)`
             }}
@@ -54,7 +94,20 @@ export default function PostCard({ post, currentUserId, onDelete }: PostCardProp
                 }}
             />
 
+            {/* Pinned Indicator (Spectral Border) */}
+            {post.is_pinned && (
+                <div className="absolute inset-0 rounded-3xl border-2 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.1)] pointer-events-none z-0" />
+            )}
+
             <div className="relative z-10 flex justify-between items-start mb-5">
+                {/* Pinned Timer (Admin Only) */}
+                {post.is_pinned && isAdmin && (
+                    <div className="absolute -top-3 right-0 bg-blue-900/80 text-blue-200 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-500/30 flex items-center gap-1 backdrop-blur-md z-20">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        {post.pinned_until ? `Expires: ${new Date(post.pinned_until).toLocaleDateString()}` : 'ETERNAL'}
+                    </div>
+                )}
+
                 {/* Author Info */}
                 <div className="flex items-center gap-3">
                     {/* Avatar with Ghost Mode blur effect */}
@@ -91,21 +144,44 @@ export default function PostCard({ post, currentUserId, onDelete }: PostCardProp
                     </div>
                 </div>
 
-                {/* Delete Option (Only for Author) */}
-                {isAuthor && onDelete && (
-                    <div className="relative">
+                {/* Action Buttons: Pin & Delete */}
+                <div className="flex items-center gap-2">
+                    {/* Pin Button (Admin Only) */}
+                    {isAdmin && (
                         <button
-                            onClick={() => onDelete(post.id)}
-                            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50/50 dark:hover:bg-red-900/20 rounded-full transition-all opacity-0 group-hover:opacity-100"
-                            title="Delete Post"
+                            onClick={() => setIsPinDialogOpen(true)}
+                            className={`p-2 rounded-full transition-all ${post.is_pinned ? 'text-blue-400 bg-blue-500/10' : 'text-slate-400 hover:text-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/20'} opacity-0 group-hover:opacity-100`}
+                            title="Temporal Pin"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
                             </svg>
                         </button>
-                    </div>
-                )}
+                    )}
+
+                    {/* Delete Option (Author or Admin) */}
+                    {canDelete && onDelete && (
+                        <div className="relative">
+                            <button
+                                onClick={() => onDelete(post.id)}
+                                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50/50 dark:hover:bg-red-900/20 rounded-full transition-all opacity-0 group-hover:opacity-100"
+                                title={isAdmin ? "Antigravity Dissolve (Admin)" : "Delete Post"}
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
+
+            <PinDialog
+                isOpen={isPinDialogOpen}
+                onClose={() => setIsPinDialogOpen(false)}
+                onConfirm={handlePinConfirm}
+                isLoading={isPinning}
+            />
 
             {/* Post Content */}
             <div className="mb-6 relative z-10">
@@ -114,7 +190,7 @@ export default function PostCard({ post, currentUserId, onDelete }: PostCardProp
                         <TruncatedText text={post.title} maxLength={60} />
                     </h2>
                 </Link>
-                <p className="text-[1.0625rem] text-slate-700 dark:text-slate-300 leading-[1.75] font-light whitespace-pre-wrap">
+                <p className="text-[1.0625rem] text-slate-800 dark:text-slate-100 leading-[1.75] font-light whitespace-pre-wrap">
                     {post.content}
                 </p>
             </div>

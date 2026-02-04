@@ -34,6 +34,8 @@ export interface Post {
     downvotes: number;
     comments_count: number;
     user_vote?: 1 | -1 | null; // Current user's vote
+    is_pinned?: boolean;
+    pinned_until?: string | null;
 }
 
 export interface Comment {

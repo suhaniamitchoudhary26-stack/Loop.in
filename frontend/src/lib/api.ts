@@ -1,4 +1,5 @@
 import axios from "axios";
+import { auth } from "./firebase"; // Import initialized firebase auth
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000",
@@ -7,29 +8,55 @@ const api = axios.create({
   },
 });
 
-// Attach token automatically
-api.interceptors.request.use((config) => {
+// Attach token automatically from Firebase or Local Admin Token
+api.interceptors.request.use(async (config) => {
+  // 1. Priority: Local Admin Token (if present)
   if (typeof window !== "undefined") {
-    const token = localStorage.getItem("token");
-    if (token) {
+    const adminToken = localStorage.getItem('admin_token');
+    if (adminToken) {
+      config.headers.Authorization = `Bearer ${adminToken}`;
+      return config;
+    }
+  }
+
+  // 2. Fallback: Firebase Token
+  if (auth.currentUser) {
+    try {
+      // Force refresh if expired
+      const token = await auth.currentUser.getIdToken();
       config.headers.Authorization = `Bearer ${token}`;
+    } catch (error) {
+      console.error("Error getting token", error);
     }
   }
   return config;
 });
+
+export const loginLocal = async (email: string, password: string) => {
+  const params = new URLSearchParams();
+  params.append('username', email);
+  params.append('password', password);
+  const response = await api.post("/auth/login", params, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  });
+  return response.data;
+};
 
 // Handle 401 globally
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (typeof window !== "undefined" && error.response?.status === 401) {
-      console.warn("Session expired or invalid token. Redirecting to login...");
-      // Clear invalid token
-      localStorage.removeItem("token");
+      console.warn("Session expired or invalid token.");
 
-      // Redirect to login if not already there
+      // Prevent global redirect for Admin pages (handled locally)
+      if (window.location.pathname.startsWith('/admin')) {
+        return Promise.reject(error);
+      }
+
       if (!window.location.pathname.includes('/login')) {
-        // Use full reload to clear all application state
         window.location.href = '/login?reason=session_expired';
       }
     }
@@ -37,15 +64,18 @@ api.interceptors.response.use(
   }
 );
 
-export const createPost = async (postData: { title: string; content: string; department: string; type: string; tags?: string }) => {
+export const createPost = async (postData: { title: string; content: string; department: string; type: string; tags?: string; is_anonymous?: boolean }) => {
   const response = await api.post("/posts/", postData);
   return response.data;
 };
 
+// Posts
+export const getPosts = async (skip = 0, limit = 10, department = 'ALL', tags?: string) => {
+  const params: any = { skip, limit };
+  if (department !== 'ALL') params.department = department;
+  if (tags) params.tags = tags;
 
-export const getPosts = async (department?: string) => {
-  const url = department && department !== 'ALL' ? `/posts/?department=${department}` : "/posts/";
-  const response = await api.get(url);
+  const response = await api.get('/posts/', { params });
   return response.data;
 };
 
@@ -57,6 +87,14 @@ export const getCampusNews = async () => {
     console.warn("Failed to fetch news, using fallback.");
     return [];
   }
+};
+
+// Pin Post (Admin)
+export const pinPost = async (postId: number, duration: string = "infinite") => {
+  const response = await api.put(`/posts/${postId}/pin`, null, {
+    params: { duration }
+  });
+  return response.data;
 };
 
 // Comments
@@ -92,12 +130,14 @@ export const deletePost = async (postId: number) => {
   return response.data;
 };
 
+// Modified: Get Current User now just fetches profile data from backend
+// Backend creates user if missing
 export const getCurrentUser = async () => {
   try {
     const response = await api.get("/auth/me");
     return response.data;
   } catch (error) {
-    return null; // Not logged in
+    return null;
   }
 };
 

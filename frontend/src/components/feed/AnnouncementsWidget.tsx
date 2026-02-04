@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/context/ToastContext';
-import { getCampusNews } from '@/lib/api';
+import { getPosts } from '@/lib/api';
 
 export default function AnnouncementsWidget() {
     const { showToast } = useToast();
@@ -12,8 +12,19 @@ export default function AnnouncementsWidget() {
     useEffect(() => {
         const fetchNews = async () => {
             try {
-                const data = await getCampusNews();
-                setAnnouncements(data || []);
+                // Fetch posts tagged as "Event" for the widget (limit 3)
+                const data = await getPosts(0, 3, 'ALL', 'Event');
+
+                // Transform Post to widget format if needed, or simply use relevant fields
+                const formattedData = data.map((post: any) => ({
+                    id: post.id,
+                    title: post.title,
+                    date: new Date(post.created_at).toLocaleDateString(),
+                    type: 'event', // Fixed type for now
+                    color: 'bg-purple-100 text-purple-600'
+                }));
+
+                setAnnouncements(formattedData || []);
             } catch (error) {
                 console.error("Failed to fetch news", error);
                 setAnnouncements([]);

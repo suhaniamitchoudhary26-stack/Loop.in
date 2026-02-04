@@ -71,10 +71,10 @@ export default function CommentItem({ comment, postId, depth = 0, currentUserId,
     const authorRole = comment.author?.role || 'student';
 
     return (
-        <div className={`mt-4 ${depth > 0 ? 'ml-8 sm:ml-12 border-l-2 border-slate-100 pl-4' : ''}`}>
+        <div className={`mt-4 ${depth > 0 ? 'ml-8 sm:ml-12 border-l-2 border-slate-100 dark:border-slate-800 pl-4' : ''}`}>
             <div className="flex gap-3">
                 {/* Avatar */}
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-xs font-bold text-blue-600 border border-white shadow-sm flex-shrink-0 overflow-hidden">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-xs font-bold text-blue-600 border border-white dark:border-slate-700 shadow-sm flex-shrink-0 overflow-hidden">
                     {comment.author?.profile_photo_url ? (
                         <img src={comment.author.profile_photo_url} alt={authorName} className="w-full h-full object-cover" />
                     ) : (
@@ -82,14 +82,14 @@ export default function CommentItem({ comment, postId, depth = 0, currentUserId,
                     )}
                 </div>
 
-                <div className="flex-1 bg-white rounded-lg p-3 border border-slate-100 shadow-sm relative group hover:border-slate-200 transition-colors">
+                <div className="flex-1 bg-white dark:bg-slate-900 rounded-lg p-3 border border-slate-100 dark:border-slate-800 shadow-sm relative group hover:border-slate-200 dark:hover:border-slate-700 transition-colors">
                     {/* Header */}
                     <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold text-sm text-slate-800">{authorName}</span>
+                        <span className="font-semibold text-sm text-slate-800 dark:text-slate-200">{authorName}</span>
                         {authorRole !== 'student' && (
-                            <span className="text-[10px] bg-blue-100 text-blue-700 px-1 rounded uppercase font-bold">{authorRole}</span>
+                            <span className="text-[10px] bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 px-1 rounded uppercase font-bold">{authorRole}</span>
                         )}
-                        <span className="text-xs text-slate-500">• {new Date(comment.created_at).toLocaleDateString()}</span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">• {new Date(comment.created_at).toLocaleDateString()}</span>
 
                         {isAuthor && (
                             <button onClick={handleDelete} className="ml-auto text-xs text-red-400 hover:text-red-600 font-medium">
@@ -99,7 +99,7 @@ export default function CommentItem({ comment, postId, depth = 0, currentUserId,
                     </div>
 
                     {/* Content */}
-                    <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{comment.content}</p>
+                    <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{comment.content}</p>
 
                     {/* Footer Actions */}
                     <div className="flex items-center gap-4 mt-2">

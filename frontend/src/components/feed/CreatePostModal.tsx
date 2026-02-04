@@ -95,12 +95,12 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
             {/* Modal */}
             <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
                 <div
-                    className="bg-white rounded-xl border border-slate-200 w-full max-w-2xl my-8 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-200"
+                    className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 w-full max-w-2xl my-8 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-200"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Header */}
-                    <div className="flex items-center justify-between p-6 border-b border-slate-100">
-                        <h2 className="text-xl font-serif font-bold text-slate-900">Create a Post</h2>
+                    <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800">
+                        <h2 className="text-xl font-serif font-bold text-slate-900 dark:text-white">Create a Post</h2>
                         <button
                             onClick={handleClose}
                             disabled={isSubmitting}
@@ -116,7 +116,7 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
                     {/* Content */}
                     <div className="p-6 space-y-6">
                         {/* Identity Toggle */}
-                        <div className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-100">
+                        <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-700">
                             <div className="flex items-center gap-3">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isAnonymous ? 'bg-slate-800 text-white' : 'bg-blue-100 text-blue-600'}`}>
                                     {isAnonymous ? (
@@ -130,7 +130,7 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
                                     )}
                                 </div>
                                 <div>
-                                    <p className="text-sm font-bold text-slate-800">
+                                    <p className="text-sm font-bold text-slate-800 dark:text-slate-100">
                                         {isAnonymous ? 'Ghost Mode' : 'Posting as Yourself'}
                                     </p>
                                     <p className="text-xs text-slate-500">
@@ -151,7 +151,7 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
 
                         {/* Post Type */}
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                 Post Type
                             </label>
                             <div className="flex gap-2">
@@ -159,8 +159,8 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
                                     onClick={() => setPostType('discussion')}
                                     disabled={isSubmitting}
                                     className={`px-4 py-2 text-sm font-medium rounded-md transition-colors disabled:opacity-50 ${postType === 'discussion'
-                                        ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200'
-                                        : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                                        ? 'bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 ring-1 ring-blue-200 dark:ring-blue-700'
+                                        : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                                         }`}
                                 >
                                     Discussion
@@ -169,8 +169,8 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
                                     onClick={() => setPostType('question')}
                                     disabled={isSubmitting}
                                     className={`px-4 py-2 text-sm font-medium rounded-md transition-colors disabled:opacity-50 ${postType === 'question'
-                                        ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200'
-                                        : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                                        ? 'bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 ring-1 ring-blue-200 dark:ring-blue-700'
+                                        : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                                         }`}
                                 >
                                     Question
@@ -179,8 +179,8 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
                                     onClick={() => setPostType('announcement')}
                                     disabled={isSubmitting}
                                     className={`px-4 py-2 text-sm font-medium rounded-md transition-colors disabled:opacity-50 ${postType === 'announcement'
-                                        ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200'
-                                        : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                                        ? 'bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 ring-1 ring-blue-200 dark:ring-blue-700'
+                                        : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                                         }`}
                                 >
                                     Announcement
@@ -190,7 +190,7 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
 
                         {/* Title */}
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                 Title <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -200,7 +200,7 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
                                 disabled={isSubmitting}
                                 placeholder="What do you want to talk about?"
                                 maxLength={200}
-                                className="w-full px-4 py-3 text-base border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400 disabled:bg-slate-50 disabled:text-slate-500"
+                                className="w-full px-4 py-3 text-base border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400 dark:bg-slate-950 dark:text-white disabled:bg-slate-50 disabled:text-slate-500"
                                 autoFocus
                             />
                             <p className="text-xs text-slate-500 mt-1">
@@ -210,7 +210,7 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
 
                         {/* Content */}
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                 Details <span className="text-red-500">*</span>
                             </label>
                             <textarea
@@ -219,8 +219,8 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
                                 disabled={isSubmitting}
                                 placeholder="Add details, context, or explanation..."
                                 rows={8}
-                                className={`w-full px-4 py-3 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all resize-none placeholder:text-slate-400 disabled:bg-slate-50 disabled:text-slate-500
-                                  ${content.length > MAX_CONTENT_LENGTH ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-slate-200'}
+                                className={`w-full px-4 py-3 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all resize-none placeholder:text-slate-400 dark:bg-slate-950 dark:text-white disabled:bg-slate-50 disabled:text-slate-500
+                                  ${content.length > MAX_CONTENT_LENGTH ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-slate-200 dark:border-slate-700'}
                                 `}
                             />
                             <div className="flex justify-between items-center mt-1">
@@ -237,14 +237,14 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
 
                         {/* Department */}
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                 Department <span className="text-red-500">*</span>
                             </label>
                             <select
                                 value={department}
                                 onChange={(e) => setDepartment(e.target.value)}
                                 disabled={isSubmitting}
-                                className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all bg-white disabled:bg-slate-50 disabled:text-slate-500"
+                                className="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all bg-white dark:bg-slate-950 dark:text-white disabled:bg-slate-50 disabled:text-slate-500"
                             >
                                 <option value="">Select department</option>
                                 <option value="cs">Computer Science</option>
@@ -258,7 +258,7 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
 
                         {/* Tags */}
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                                 Tags (Optional)
                             </label>
                             <input
@@ -267,13 +267,13 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
                                 onChange={(e) => setTags(e.target.value)}
                                 disabled={isSubmitting}
                                 placeholder="e.g., Exams, Projects, Career"
-                                className="w-full px-4 py-2.5 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400 disabled:bg-slate-50 disabled:text-slate-500"
+                                className="w-full px-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400 dark:bg-slate-950 dark:text-white disabled:bg-slate-50 disabled:text-slate-500"
                             />
                         </div>
                     </div>
 
                     {/* Footer */}
-                    <div className="flex items-center justify-between p-6 border-t border-slate-100 bg-slate-50/50 rounded-b-xl">
+                    <div className="flex items-center justify-between p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 rounded-b-xl">
                         <Button
                             variant="ghost"
                             onClick={handleClose}

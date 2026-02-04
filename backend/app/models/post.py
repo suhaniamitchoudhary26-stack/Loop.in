@@ -24,6 +24,8 @@ class Post(Base):
     author = relationship("User", backref="posts")
 
     # Extra fields for this app
-    department = Column(String, nullable=False)
+    department = Column(String, nullable=False, index=True)
     tags = Column(String, nullable=True) # Comma separated tags
     type = Column(String, default="discussion") # discussion, question, announcement
+    is_pinned = Column(Boolean, default=False)
+    pinned_until = Column(DateTime, nullable=True)

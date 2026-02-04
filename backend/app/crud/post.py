@@ -9,6 +9,7 @@ def create_post(db: Session, post: PostCreate, author_id: int = None):
         department=post.department,
         tags=post.tags,
         type=post.type,
+        is_anonymous=post.is_anonymous,
         author_id=author_id
     )
     db.add(db_post)

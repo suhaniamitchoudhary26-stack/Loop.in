@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getNotifications, markNotificationRead, markAllNotificationsRead, getCurrentUser } from '@/lib/api'; // Check path
 import { useAuth } from '@/context/AuthContext';
+import { useSocket } from '@/context/SocketContext';
 
 type NotificationType = 'academic' | 'social' | 'system';
 
@@ -90,54 +91,36 @@ export default function NotificationDropdown() {
     };
 
     // WebSocket Connection
+    const { lastMessage } = useSocket();
+
     useEffect(() => {
         if (!user) return;
-
         // Fetch history first
         fetchNotifications();
+    }, [user]);
 
-        // Connect WS
-        let ws: WebSocket | null = null;
+    // Handle incoming messages
+    useEffect(() => {
+        if (!lastMessage) return;
 
-        const connectWs = async () => {
-            try {
-                // Use user from context instead of refetching
-                const wsUrl = `ws://localhost:8000/notifications/ws/${user.id}`; // Make env var in prod
-                ws = new WebSocket(wsUrl);
+        // Ensure it is a notification (simple check, or use types)
+        // If message has type 'new_post', we ignore it here (handled in Home)
+        // Adjust this if you want notifications about new posts too
+        if (lastMessage.type === 'new_post') return;
 
-                ws.onopen = () => {
-                    console.log("WS Connected");
-                };
-
-                ws.onmessage = (event) => {
-                    const data = JSON.parse(event.data);
-                    // Handle new notification
-                    const newNotif = {
-                        id: Date.now(), // Temp ID until refresh
-                        type: data.type === 'comment' || data.type === 'upvote' ? 'social' : 'academic',
-                        title: data.title,
-                        description: data.message,
-                        time: 'Just now',
-                        isRead: false,
-                        sender: data.sender,
-                        raw_created_at: new Date().toISOString()
-                    };
-
-                    setNotifications(prev => [newNotif as Notification, ...prev]);
-                };
-
-                ws.onerror = (e) => console.error("WS Error", e);
-            } catch (e) {
-                console.error("Setup error", e);
-            }
+        const newNotif = {
+            id: Date.now(),
+            type: lastMessage.type === 'comment' || lastMessage.type === 'upvote' ? 'social' : 'academic',
+            title: lastMessage.title,
+            description: lastMessage.message,
+            time: 'Just now',
+            isRead: false,
+            sender: lastMessage.sender,
+            raw_created_at: new Date().toISOString()
         };
 
-        connectWs();
-
-        return () => {
-            if (ws) ws.close();
-        };
-    }, [user]); // Re-run when user changes
+        setNotifications(prev => [newNotif as Notification, ...prev]);
+    }, [lastMessage]);
 
     // Close on click outside
     useEffect(() => {

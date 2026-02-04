@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 from datetime import datetime
 from typing import Optional
 from app.schemas.user import UserBasic
@@ -7,6 +7,8 @@ from app.schemas.user import UserBasic
 class PostBase(BaseModel):
     title: str
     content: str
+    is_pinned: bool = False
+    pinned_until: Optional[datetime] = None
     department: str
     type: str = "discussion"
     tags: Optional[str] = None
@@ -33,5 +35,8 @@ class Post(PostBase):
     comments_count: int = 0
     user_vote: Optional[int] = None # 1, -1, or None (if not voted)
     
+    # Validator removed to handle redaction in API (for Admin Unmasking)
+
+
     class Config:
         from_attributes = True

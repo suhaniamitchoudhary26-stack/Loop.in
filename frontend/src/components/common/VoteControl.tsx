@@ -12,8 +12,8 @@ interface VoteControlProps {
 }
 
 export default function VoteControl({
-    initialUpvotes,
-    initialDownvotes,
+    initialUpvotes = 0,
+    initialDownvotes = 0,
     initialUserVote,
     postId,
     commentId,

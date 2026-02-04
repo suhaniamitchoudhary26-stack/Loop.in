@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import api from '@/lib/api';
-import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface EnrollmentModalProps {
     isOpen: boolean;
@@ -13,6 +13,7 @@ export default function EnrollmentModal({ isOpen, onSuccess }: EnrollmentModalPr
     const [enrollment, setEnrollment] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const [focused, setFocused] = useState(false);
 
     if (!isOpen) return null;
 
@@ -23,73 +24,112 @@ export default function EnrollmentModal({ isOpen, onSuccess }: EnrollmentModalPr
 
         try {
             await api.put('/auth/me/enrollment', { enrollment_number: enrollment });
-            onSuccess();
+            // Animation delay for success feel
+            setTimeout(() => {
+                onSuccess();
+            }, 500);
         } catch (err: any) {
             if (err.response) {
                 setError(err.response.data.detail || 'Failed to update enrollment');
             } else {
                 setError('Network error. Please try again.');
             }
-        } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 animate-in fade-in zoom-in duration-200">
-                {/* Header */}
-                <div className="bg-blue-600 p-6 text-center">
-                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 text-white">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0c0 .884-.5 2-2 2h4c-1.5 0-2-1.116-2-2z" />
-                        </svg>
-                    </div>
-                    <h2 className="text-xl font-bold text-white">Final Step: Verification</h2>
-                    <p className="text-blue-100 text-sm mt-1">We need your Enrollment Number to give you access.</p>
+        <AnimatePresence>
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md"
+            >
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl animate-pulse" />
+                    <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-700" />
                 </div>
 
-                {/* Body */}
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                    <div className="space-y-1">
-                        <label className="block text-sm font-semibold text-slate-700">
-                            Enrollment Number
-                        </label>
-                        <input
-                            type="text"
-                            required
-                            value={enrollment}
-                            onChange={(e) => setEnrollment(e.target.value.toUpperCase())}
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 uppercase font-mono tracking-wide"
-                            placeholder="0827CS..."
-                        />
-                        <p className="text-xs text-slate-500">
-                            This will be your unique identity on CampusLoop.
-                        </p>
+                <motion.div
+                    initial={{ scale: 0.9, y: 20, opacity: 0 }}
+                    animate={{ scale: 1, y: 0, opacity: 1 }}
+                    transition={{ type: "spring", duration: 0.8, bounce: 0.3 }}
+                    className="relative w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden"
+                    style={{
+                        boxShadow: '0 0 50px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.05)'
+                    }}
+                >
+                    {/* Header */}
+                    <div className="relative p-8 text-center pb-0">
+                        <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: 0.2, type: 'spring' }}
+                            className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30"
+                        >
+                            <span className="text-3xl">🆔</span>
+                        </motion.div>
+                        <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">Final Check</h2>
+                        <p className="text-slate-400 text-sm">Please provide your university enrollment number to complete your profile.</p>
                     </div>
 
-                    {error && (
-                        <div className="p-3 bg-red-50 text-red-600 text-sm rounded-md border border-red-100 flex items-center gap-2">
-                            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            {error}
+                    {/* Form */}
+                    <form onSubmit={handleSubmit} className="p-8 pt-6 space-y-6">
+                        <div className="relative group">
+                            <motion.div
+                                animate={focused ? { scale: 1.02 } : { scale: 1 }}
+                                className={`absolute -inset-0.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 opacity-0 group-hover:opacity-100 transition duration-500 ${focused ? 'opacity-100 blur-sm' : ''}`}
+                            />
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    required
+                                    value={enrollment}
+                                    onChange={(e) => setEnrollment(e.target.value.toUpperCase())}
+                                    onFocus={() => setFocused(true)}
+                                    onBlur={() => setFocused(false)}
+                                    className="block w-full px-4 py-4 bg-slate-900/90 border border-slate-700 text-white rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all placeholder-slate-600 font-mono text-center tracking-widest text-lg uppercase"
+                                    placeholder="0827CS..."
+                                />
+                            </div>
                         </div>
-                    )}
 
-                    <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full py-3 px-4 bg-slate-900 text-white font-semibold rounded-lg hover:bg-slate-800 focus:ring-4 focus:ring-slate-200 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
-                    >
-                        {isLoading ? 'Verifying...' : 'Complete Profile'}
-                    </button>
+                        <AnimatePresence>
+                            {error && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="text-red-400 text-sm text-center font-medium bg-red-900/20 py-2 rounded-lg border border-red-500/20"
+                                >
+                                    ⚠️ {error}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
-                    <p className="text-center text-xs text-slate-400 mt-4">
-                        Having trouble? <a href="#" className="underline hover:text-slate-600">Contact Support</a>
-                    </p>
-                </form>
-            </div>
-        </div>
+                        <motion.button
+                            type="submit"
+                            disabled={isLoading}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className={`w-full py-4 rounded-xl font-bold text-white shadow-lg transition-all ${isLoading
+                                    ? 'bg-slate-700 cursor-not-allowed'
+                                    : 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:shadow-indigo-500/25'
+                                }`}
+                        >
+                            {isLoading ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    Verifying...
+                                </span>
+                            ) : (
+                                'Complete Verification'
+                            )}
+                        </motion.button>
+                    </form>
+                </motion.div>
+            </motion.div>
+        </AnimatePresence>
     );
 }

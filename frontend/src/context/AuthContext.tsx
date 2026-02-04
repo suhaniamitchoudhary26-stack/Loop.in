@@ -2,13 +2,15 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { auth } from '@/lib/firebase'; // Custom firebase instance
+import { onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
 import { getCurrentUser } from '@/lib/api';
 import { User } from '@/types';
 
 interface AuthContextType {
-    user: User | null;
+    user: User | null; // Our backend user shape
+    firebaseUser: FirebaseUser | null; // Raw firebase user
     loading: boolean;
-    login: (token: string, user: User) => void;
     logout: () => void;
     refreshUser: () => Promise<void>;
 }
@@ -17,64 +19,73 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
+    const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
     const pathname = usePathname();
 
-    // Init auth check
     useEffect(() => {
-        async function initAuth() {
-            const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-            if (token) {
+        // Firebase Auth Listener
+        const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+            setLoading(true);
+            setFirebaseUser(fbUser);
+
+            if (fbUser) {
+                // User is signed in with Firebase. 
+                // Now verify/fetch profile from our Backend.
                 try {
-                    const userData = await getCurrentUser();
-                    if (userData) {
-                        setUser(userData);
+                    // Get token to force interceptor to work immediately (optional check)
+                    await fbUser.getIdToken();
+
+                    // Fetch profile from backend (which lazily creates user if needed)
+                    const dbUser = await getCurrentUser();
+                    if (dbUser) {
+                        setUser(dbUser);
                     } else {
-                        // Token invalid/expired
-                        localStorage.removeItem('token');
+                        console.warn("Backend failed to return user profile despite valid firebase session.");
                     }
-                } catch (error) {
-                    console.error("Auth init failed", error);
-                    localStorage.removeItem('token');
+                } catch (err) {
+                    console.error("Failed to sync with backend", err);
                 }
+            } else {
+                // Logged out
+                setUser(null);
             }
             setLoading(false);
-        }
-        initAuth();
+        });
+
+        return () => unsubscribe();
     }, []);
 
-    const login = (token: string, userData: User) => {
-        localStorage.setItem('token', token);
-        setUser(userData);
-        router.push('/');
-    };
-
-    const logout = () => {
-        localStorage.removeItem('token');
-        setUser(null);
-        // Force full refresh to clear any in-memory state
-        window.location.href = '/login';
+    const logout = async () => {
+        try {
+            await signOut(auth);
+            setUser(null);
+            setFirebaseUser(null);
+            router.push('/login');
+        } catch (error) {
+            console.error("Logout failed", error);
+        }
     };
 
     const refreshUser = async () => {
+        if (!auth.currentUser) return;
         const userData = await getCurrentUser();
         if (userData) setUser(userData);
     };
 
     // Route Protection (Client-side)
-    // Add paths here that require login
     const protectedRoutes = ['/profile', '/settings'];
     const isProtected = protectedRoutes.some(route => pathname?.startsWith(route));
 
     useEffect(() => {
-        if (!loading && !user && isProtected) {
+        if (!loading && !firebaseUser && isProtected) {
             router.push('/login');
         }
-    }, [loading, user, isProtected, router]);
+    }, [loading, firebaseUser, isProtected, router]);
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, logout, refreshUser }}>
+        <AuthContext.Provider value={{ user, firebaseUser, loading, logout, refreshUser }}>
             {children}
         </AuthContext.Provider>
     );

@@ -13,6 +13,8 @@ import AnnouncementsWidget from '@/components/feed/AnnouncementsWidget';
 import FeedEmptyState from '@/components/feed/FeedEmptyState';
 import DepartmentFilter from '@/components/feed/DepartmentFilter';
 import { Post } from '@/types';
+import SplineBanner from '@/components/feed/SplineBanner';
+import { useSocket } from '@/context/SocketContext';
 
 // Stagger animation variants
 const containerVariants = {
@@ -75,7 +77,8 @@ export default function Home() {
 
     const fetchPosts = async (dept?: string) => {
         try {
-            const data = await getPosts(dept);
+            // Fix: Pass arguments in correct order (skip, limit, department)
+            const data = await getPosts(0, 100, dept);
             setPosts(data);
         } catch (error) {
             console.error("Failed to fetch posts", error);
@@ -84,9 +87,26 @@ export default function Home() {
         }
     };
 
-    // Derived state for filtering is no longer needed as backend does it, 
-    // but we use 'posts' directly which acts as the filtered source.
-    const displayPosts = posts;
+    // Real-time Updates
+    const { lastMessage } = useSocket();
+
+    useEffect(() => {
+        if (!lastMessage) return;
+
+        if (lastMessage.type === 'new_post') {
+            const newPost = lastMessage.data;
+            // Only add if it doesn't exist (prevent dupes if any)
+            setPosts(prev => {
+                if (prev.some(p => p.id === newPost.id)) return prev;
+                return [newPost, ...prev];
+            });
+
+            // Optional: filtering by department if strictly needed, 
+            // but we usually want to see everything or handle it via backend filtering
+            // For now, simple prepend since 'ALL' is default or assume backend broadcasts relevant stuff?
+            // Actually `newPost` should be full post object.
+        }
+    }, [lastMessage]);
 
     const handleDeleteClick = (postId: number) => {
         setPostToDelete(postId);
@@ -157,6 +177,9 @@ export default function Home() {
                     </button>
                 </header>
 
+                {/* Spline 3D Banner */}
+                <SplineBanner />
+
                 {/* Department Filter */}
                 <DepartmentFilter
                     selectedDepartment={selectedDepartment}
@@ -170,7 +193,7 @@ export default function Home() {
                             <motion.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                                 <PostSkeleton count={3} />
                             </motion.div>
-                        ) : displayPosts.length === 0 ? (
+                        ) : posts.length === 0 ? (
                             <motion.div key="empty" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
                                 <FeedEmptyState onCreatePost={() => setIsCreatePostOpen(true)} />
                             </motion.div>
@@ -182,11 +205,12 @@ export default function Home() {
                                 animate="visible"
                                 className="space-y-6"
                             >
-                                {displayPosts.map((post) => (
+                                {posts.map((post) => (
                                     <motion.div key={post.id} variants={itemVariants}>
                                         <PostCard
                                             post={post}
                                             currentUserId={currentUserId}
+                                            currentUser={currentUser}
                                             onDelete={handleDeleteClick}
                                         />
                                     </motion.div>

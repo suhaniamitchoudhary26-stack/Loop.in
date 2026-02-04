@@ -1,4 +1,5 @@
 """
+# Reload Trigger
 FastAPI application entry point with proper lifecycle management.
 
 This module sets up:
@@ -67,14 +68,14 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS middleware
+# CORS middleware - Allow all origins for development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[],
-    allow_origin_regex='.*',
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 
