@@ -70,7 +70,9 @@ def get_current_user(
              raise HTTPException(status_code=400, detail="User email not found in token")
 
     except Exception as e:
-        print(f"Auth Error: {e}")
+        print(f"Auth Error Details: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise credentials_exception
 
 

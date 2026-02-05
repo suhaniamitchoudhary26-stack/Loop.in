@@ -33,6 +33,7 @@ class Post(PostBase):
     upvotes: int = 0
     downvotes: int = 0
     comments_count: int = 0
+    share_count: int = 0  # Track share popularity
     user_vote: Optional[int] = None # 1, -1, or None (if not voted)
     
     # Validator removed to handle redaction in API (for Admin Unmasking)

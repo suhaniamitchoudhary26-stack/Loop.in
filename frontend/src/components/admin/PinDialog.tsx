@@ -7,10 +7,12 @@ interface PinDialogProps {
     isOpen: boolean;
     onClose: () => void;
     onConfirm: (duration: string) => void;
+    onUnpin?: () => void;
+    isPinned?: boolean;
     isLoading: boolean;
 }
 
-export default function PinDialog({ isOpen, onClose, onConfirm, isLoading }: PinDialogProps) {
+export default function PinDialog({ isOpen, onClose, onConfirm, onUnpin, isPinned, isLoading }: PinDialogProps) {
     const [duration, setDuration] = useState('24h');
 
     const options = [
@@ -57,8 +59,8 @@ export default function PinDialog({ isOpen, onClose, onConfirm, isLoading }: Pin
                                 key={opt.value}
                                 onClick={() => setDuration(opt.value)}
                                 className={`w-full flex justify-between items-center px-4 py-3 rounded-lg border transition-all duration-200 ${duration === opt.value
-                                        ? 'bg-blue-600/20 border-blue-500 text-blue-300 shadow-[0_0_15px_rgba(59,130,246,0.2)]'
-                                        : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:border-white/10'
+                                    ? 'bg-blue-600/20 border-blue-500 text-blue-300 shadow-[0_0_15px_rgba(59,130,246,0.2)]'
+                                    : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:border-white/10'
                                     }`}
                             >
                                 <span className="font-bold text-sm uppercase tracking-wide">{opt.label}</span>
@@ -70,6 +72,15 @@ export default function PinDialog({ isOpen, onClose, onConfirm, isLoading }: Pin
                     </div>
 
                     <div className="flex justify-end gap-3">
+                        {isPinned && onUnpin && (
+                            <button
+                                onClick={onUnpin}
+                                disabled={isLoading}
+                                className="mr-auto px-4 py-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 text-sm font-bold rounded-lg border border-red-500/20 transition-colors"
+                            >
+                                Unpin
+                            </button>
+                        )}
                         <button
                             onClick={onClose}
                             className="px-4 py-2 text-slate-400 text-sm font-bold hover:text-white transition-colors"
@@ -81,7 +92,7 @@ export default function PinDialog({ isOpen, onClose, onConfirm, isLoading }: Pin
                             disabled={isLoading}
                             className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold rounded-lg shadow-lg shadow-blue-500/25 transition-all disabled:opacity-50 flex items-center gap-2"
                         >
-                            {isLoading ? 'Scanning...' : 'Initiate Pin'}
+                            {isLoading ? 'Processing...' : (isPinned ? 'Update Pin' : 'Initiate Pin')}
                         </button>
                     </div>
                 </motion.div>

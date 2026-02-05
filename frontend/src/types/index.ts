@@ -33,6 +33,7 @@ export interface Post {
     upvotes: number;
     downvotes: number;
     comments_count: number;
+    share_count?: number;  // Track share popularity
     user_vote?: 1 | -1 | null; // Current user's vote
     is_pinned?: boolean;
     pinned_until?: string | null;

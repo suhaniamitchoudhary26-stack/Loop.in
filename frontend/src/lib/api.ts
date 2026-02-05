@@ -56,7 +56,9 @@ api.interceptors.response.use(
         return Promise.reject(error);
       }
 
-      if (!window.location.pathname.includes('/login')) {
+      // Only redirect if we don't have a firebase session either
+      // If we DO have a firebase session, AuthContext will handle it or it's a temporary token issue
+      if (!auth.currentUser && !window.location.pathname.includes('/login')) {
         window.location.href = '/login?reason=session_expired';
       }
     }
@@ -90,11 +92,28 @@ export const getCampusNews = async () => {
 };
 
 // Pin Post (Admin)
+// Pin Post (Admin)
 export const pinPost = async (postId: number, duration: string = "infinite") => {
   const response = await api.put(`/posts/${postId}/pin`, null, {
     params: { duration }
   });
   return response.data;
+};
+
+export const unpinPost = async (postId: number) => {
+  const response = await api.put(`/posts/${postId}/unpin`);
+  return response.data;
+};
+
+// Share Post (Smart Share)
+export const sharePost = async (postId: number) => {
+  try {
+    const response = await api.patch(`/posts/${postId}/share`);
+    return response.data;
+  } catch (error) {
+    console.warn("Failed to track share:", error);
+    return null;
+  }
 };
 
 // Comments

@@ -3,12 +3,13 @@ import { motion } from 'framer-motion';
 import { Post } from '@/types';
 import UserAvatar from '@/components/common/UserAvatar';
 import VoteControl from '@/components/common/VoteControl';
+import SmartShareButton from '@/components/common/SmartShareButton';
 import DepartmentBadge from '@/components/feed/DepartmentBadge';
 import CommentSection from '@/components/comments/CommentSection';
 import ReactionPicker from '@/components/common/ReactionPicker';
 import TruncatedText from '@/components/common/TruncatedText';
 import PinDialog from '@/components/admin/PinDialog';
-import { pinPost } from '@/lib/api';
+import { pinPost, unpinPost } from '@/lib/api';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/context/ToastContext';
 
@@ -30,8 +31,7 @@ export default function PostCard({ post, currentUserId, currentUser, onDelete }:
             await pinPost(post.id, duration);
             showToast(`Post pinned for ${duration === 'infinite' ? 'Eternity' : duration}`, "success");
             setIsPinDialogOpen(false);
-            // Ideally, we'd update the local post state or re-fetch, but layout animation handles reorder
-            window.location.reload(); // Simple reload to refresh order for now
+            window.location.reload();
         } catch (error) {
             console.error(error);
             showToast("Failed to pin post", "error");
@@ -39,6 +39,25 @@ export default function PostCard({ post, currentUserId, currentUser, onDelete }:
             setIsPinning(false);
         }
     };
+
+    const handleUnpin = async () => {
+        setIsPinning(true);
+        try {
+            await unpinPost(post.id);
+            showToast("Post unpinned", "success");
+            setIsPinDialogOpen(false);
+            window.location.reload();
+        } catch (error) {
+            console.error(error);
+            showToast("Failed to unpin post", "error");
+        } finally {
+            setIsPinning(false);
+        }
+    };
+
+
+
+
 
     // Department Color Map
     const deptColors: Record<string, string> = {
@@ -180,6 +199,8 @@ export default function PostCard({ post, currentUserId, currentUser, onDelete }:
                 isOpen={isPinDialogOpen}
                 onClose={() => setIsPinDialogOpen(false)}
                 onConfirm={handlePinConfirm}
+                onUnpin={handleUnpin}
+                isPinned={post.is_pinned}
                 isLoading={isPinning}
             />
 
@@ -221,12 +242,12 @@ export default function PostCard({ post, currentUserId, currentUser, onDelete }:
                         />
                     </div>
 
-                    <button className="flex items-center gap-1.5 text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-slate-500">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                        </svg>
-                        <span>Share</span>
-                    </button>
+                    {/* Smart Share Button */}
+                    <SmartShareButton
+                        postId={post.id}
+                        postTitle={post.title}
+                        initialShareCount={post.share_count || 0}
+                    />
                 </div>
 
                 <div className="mt-4">

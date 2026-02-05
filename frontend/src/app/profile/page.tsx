@@ -2,26 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { getCurrentUser } from '@/lib/api';
-import { User } from '@/types';
+import { useAuth } from '@/context/AuthContext';
 import UserAvatar from '@/components/common/UserAvatar';
 import { useRouter } from 'next/navigation';
 
 export default function ProfilePage() {
-    const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState(true);
+    const { user, loading } = useAuth();
     const router = useRouter();
-
-    useEffect(() => {
-        getCurrentUser().then(userData => {
-            if (!userData) {
-                router.push('/login');
-                return;
-            }
-            setUser(userData);
-            setLoading(false);
-        });
-    }, [router]);
+    // AuthContext handles protection, but we can double check here optionally
+    // or just rely on the content only showing when user is present.
 
     if (loading) return <div className="p-8 text-center text-slate-500">Loading profile...</div>;
     if (!user) return null;

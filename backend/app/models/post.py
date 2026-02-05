@@ -18,6 +18,7 @@ class Post(Base):
     upvotes = Column(Integer, default=0)
     downvotes = Column(Integer, default=0)
     comments_count = Column(Integer, default=0)
+    share_count = Column(Integer, default=0)  # Track share popularity
     
     # Author (optional for now, can be linked to User if we enforce auth)
     author_id = Column(Integer, ForeignKey("users.id"), nullable=True)

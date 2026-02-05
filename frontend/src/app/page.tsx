@@ -11,10 +11,10 @@ import ConfirmationModal from '@/components/common/ConfirmationModal';
 import Link from 'next/link';
 import AnnouncementsWidget from '@/components/feed/AnnouncementsWidget';
 import FeedEmptyState from '@/components/feed/FeedEmptyState';
-import DepartmentFilter from '@/components/feed/DepartmentFilter';
 import { Post } from '@/types';
 import SplineBanner from '@/components/feed/SplineBanner';
 import { useSocket } from '@/context/SocketContext';
+import HeroSection from '@/components/feed/HeroSection';
 
 // Stagger animation variants
 const containerVariants = {
@@ -47,9 +47,6 @@ export default function Home() {
     const [postToDelete, setPostToDelete] = useState<number | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    // Department Filter
-    const [selectedDepartment, setSelectedDepartment] = useState('ALL');
-
     // Real Current User
     const [currentUserId, setCurrentUserId] = useState<number | null>(null);
     const [currentUser, setCurrentUser] = useState<any>(null);
@@ -66,19 +63,13 @@ export default function Home() {
             }
         });
         // Initial fetch
-        fetchPosts(selectedDepartment);
+        fetchPosts();
     }, []);
 
-    // Re-fetch when department changes
-    useEffect(() => {
-        setIsLoading(true);
-        fetchPosts(selectedDepartment);
-    }, [selectedDepartment]);
-
-    const fetchPosts = async (dept?: string) => {
+    const fetchPosts = async () => {
         try {
-            // Fix: Pass arguments in correct order (skip, limit, department)
-            const data = await getPosts(0, 100, dept);
+            // Fetch all posts without department filter
+            const data = await getPosts(0, 100, 'ALL');
             setPosts(data);
         } catch (error) {
             console.error("Failed to fetch posts", error);
@@ -167,6 +158,7 @@ export default function Home() {
                     </div>
 
                     <button
+                        data-create-post
                         onClick={() => setIsCreatePostOpen(true)}
                         className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-bold rounded-full hover:scale-105 active:scale-95 transition-all duration-200 shadow-lg shadow-blue-500/30 shrink-0"
                     >
@@ -177,17 +169,11 @@ export default function Home() {
                     </button>
                 </header>
 
-                {/* Spline 3D Banner */}
-                <SplineBanner />
-
-                {/* Department Filter */}
-                <DepartmentFilter
-                    selectedDepartment={selectedDepartment}
-                    onSelect={setSelectedDepartment}
-                />
+                {/* Hero Section */}
+                <HeroSection />
 
                 {/* Posts List with Staggered Animation */}
-                <div className="space-y-6 min-h-[500px]">
+                <div id="feed-section" className="space-y-6 min-h-[500px]">
                     <AnimatePresence mode="popLayout">
                         {isLoading ? (
                             <motion.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -222,7 +208,7 @@ export default function Home() {
             </div>
 
             {/* Right Column: Campus News (Desktop Only) */}
-            <aside className="hidden lg:block w-full">
+            <aside className="hidden lg:block w-full mt-16">
                 <AnnouncementsWidget />
             </aside>
 

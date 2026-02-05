@@ -27,6 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         // Firebase Auth Listener
         const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+            console.log("AuthContext: onAuthStateChanged triggered", fbUser ? "User found" : "No user");
             setLoading(true);
             setFirebaseUser(fbUser);
 
@@ -34,11 +35,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 // User is signed in with Firebase. 
                 // Now verify/fetch profile from our Backend.
                 try {
+                    console.log("AuthContext: Fetching ID token and backend profile...");
                     // Get token to force interceptor to work immediately (optional check)
                     await fbUser.getIdToken();
 
                     // Fetch profile from backend (which lazily creates user if needed)
                     const dbUser = await getCurrentUser();
+                    console.log("AuthContext: Backend response:", dbUser);
                     if (dbUser) {
                         setUser(dbUser);
                     } else {
@@ -49,6 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 }
             } else {
                 // Logged out
+                console.log("AuthContext: User logged out");
                 setUser(null);
             }
             setLoading(false);

@@ -28,13 +28,22 @@ const TEAM_MEMBERS: TeamMember[] = [
         delay: 0
     },
     {
+        id: 2,
+        name: "Pranshu Samadhiya",
+        role: "Developer",
+        imageSrc: "/team/member2.jpg",
+        githubUrl: "https://github.com/pranshu1899",
+        linkedinUrl: "https://www.linkedin.com/in/pranshu-samadhiya-415052380",
+        delay: 0.2
+    },
+    {
         id: 3,
         name: "Suhani Choudhary",
         role: "Developer",
         imageSrc: "/team/member4.jpg",
         githubUrl: "https://github.com/suhaniamitchoudhary26-stack",
         linkedinUrl: "https://www.linkedin.com/in/suhani-choudhary-a66230379/",
-        delay: 0.2
+        delay: 0.4
     },
     {
         id: 4,
@@ -43,15 +52,6 @@ const TEAM_MEMBERS: TeamMember[] = [
         imageSrc: "/team/member3.jpg",
         githubUrl: "https://github.com/mebisen06",
         linkedinUrl: "https://www.linkedin.com/in/meetbisen/",
-        delay: 0.4
-    },
-    {
-        id: 2,
-        name: "Pranshu Samadhiya",
-        role: "Developer",
-        imageSrc: "/team/member2.jpg",
-        githubUrl: "https://github.com/pranshu1899",
-        linkedinUrl: "https://www.linkedin.com/in/pranshu-samadhiya-415052380",
         delay: 0.6
     }
 ];
@@ -201,7 +201,8 @@ const SuspendedAvatar = ({ member }: { member: TeamMember }) => {
                             src={member.imageSrc}
                             alt={member.name}
                             fill
-                            className={`object-cover transition-transform duration-700 ${isHovered ? 'scale-110' : 'scale-100'}`}
+                            className={`object-cover object-center transition-transform duration-700 ${isHovered ? 'scale-110' : 'scale-100'}`}
+                            style={{ objectPosition: 'center center' }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent pointer-events-none" />
                     </div>
@@ -253,7 +254,7 @@ export default function DevelopersPage() {
                     transition={{ duration: 0.6 }}
                 >
                     <h1 className="text-3xl md:text-5xl font-medium tracking-tight text-slate-800 dark:text-slate-100 mb-4 md:mb-6 font-sans">
-                        Developed by Team Codality
+                        Meet the Developers
                     </h1>
                 </motion.div>
             </header>

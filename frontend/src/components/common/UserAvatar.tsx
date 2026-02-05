@@ -32,18 +32,20 @@ export default function UserAvatar({ user, size = 'md', className = '' }: UserAv
 
     if (user?.profile_photo_url) {
         return (
-            <img
-                src={user.profile_photo_url}
-                alt={user.username || 'User'}
-                className={`rounded-full object-cover border border-slate-200 ${getSizeClasses()} ${className}`}
-            />
+            <div className={`relative rounded-full overflow-hidden border border-slate-200 shrink-0 ${getSizeClasses()} ${className}`}>
+                <img
+                    src={user.profile_photo_url}
+                    alt={user.username || 'User'}
+                    className="w-full h-full object-cover"
+                />
+            </div>
         );
     }
 
     // Fallback to initials
     return (
         <div
-            className={`rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center font-bold text-blue-600 border border-white shadow-sm ${getSizeClasses()} ${className}`}
+            className={`rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center font-bold text-blue-600 border border-white shadow-sm shrink-0 ${getSizeClasses()} ${className}`}
         >
             {getInitials()}
         </div>

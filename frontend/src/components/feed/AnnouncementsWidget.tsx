@@ -36,7 +36,7 @@ export default function AnnouncementsWidget() {
     }, []);
 
     return (
-        <div className="bg-slate-50/80 dark:bg-slate-900/50 backdrop-blur-md rounded-xl border border-slate-200/60 dark:border-slate-700/50 p-6 sticky top-6">
+        <div className="bg-slate-50/80 dark:bg-slate-900/50 backdrop-blur-md rounded-xl border border-slate-200/60 dark:border-slate-700/50 p-6 sticky top-20">
             <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Campus News</h2>
                 <button

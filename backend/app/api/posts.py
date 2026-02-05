@@ -80,39 +80,29 @@ def read_posts(
 
 # ... create_post ... # ... read_post ... # ... delete_post ...
 
-@router.put("/{post_id}/pin", response_model=Post)
-def pin_post(
+@router.put("/{post_id}/unpin", response_model=Post)
+def unpin_post(
     post_id: int,
-    duration: str = "infinite", # 24h, 7d, 30d, infinite
     db: Session = Depends(get_db),
     admin: User = Depends(get_current_admin)
 ):
     """
-    Temporal Pinning: Admins can pin posts for a specific duration.
+    Unpin a post.
     """
     post = crud_post.get_post(db, post_id)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
         
-    post.is_pinned = True
-    
-    # Calculate Expiration
-    if duration == "24h":
-        post.pinned_until = datetime.utcnow() + timedelta(hours=24)
-    elif duration == "7d":
-        post.pinned_until = datetime.utcnow() + timedelta(days=7)
-    elif duration == "30d":
-        post.pinned_until = datetime.utcnow() + timedelta(days=30)
-    else: # infinite
-        post.pinned_until = None
+    post.is_pinned = False
+    post.pinned_until = None
     
     # Audit Log
     log = AuditLog(
-        action="PIN_POST",
+        action="UNPIN_POST",
         admin_id=admin.id,
         target_id=post.id,
         target_type="post",
-        details=f"Pinned post '{post.title[:20]}...' for {duration}"
+        details=f"Unpinned post '{post.title[:20]}...'"
     )
     db.add(log)
     
@@ -234,6 +224,53 @@ def delete_post(
         
     crud_post.delete_post(db=db, post_id=post_id)
     return None
+
+# Simple in-memory rate limiting for shares (5 per minute per user)
+from collections import defaultdict
+import time
+
+share_rate_limits: dict = defaultdict(list)
+
+@router.patch("/{post_id}/share", status_code=status.HTTP_200_OK)
+def increment_share_count(
+    post_id: int,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
+    """
+    Smart Share: Increment share count with rate limiting.
+    Max 5 shares per user per minute to prevent spam.
+    """
+    # Rate limiting check
+    user_key = str(current_user.id) if current_user else "anonymous"
+    current_time = time.time()
+    
+    # Clean old entries (older than 60 seconds)
+    share_rate_limits[user_key] = [
+        t for t in share_rate_limits[user_key] if current_time - t < 60
+    ]
+    
+    # Check limit (5 per minute)
+    if len(share_rate_limits[user_key]) >= 5:
+        raise HTTPException(
+            status_code=429, 
+            detail="Too many shares. Please wait a minute before sharing again."
+        )
+    
+    # Find post
+    post = crud_post.get_post(db, post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    
+    # Increment share count
+    post.share_count = (post.share_count or 0) + 1
+    db.commit()
+    db.refresh(post)
+    
+    # Record this share for rate limiting
+    share_rate_limits[user_key].append(current_time)
+    
+    return {"share_count": post.share_count, "message": "Share counted!"}
 
 @router.put("/{post_id}/pin", response_model=Post)
 def pin_post(

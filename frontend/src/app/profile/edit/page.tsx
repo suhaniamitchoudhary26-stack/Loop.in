@@ -11,14 +11,13 @@ import { motion } from 'framer-motion';
 const DEPARTMENTS = ['CS', 'IT', 'EE', 'ME', 'CE', 'General'];
 
 export default function EditProfilePage() {
-    const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const [errors, setErrors] = useState<Record<string, string>>({});
+    const { user, loading: authLoading, refreshUser } = useAuth();
     const router = useRouter();
     const { showToast } = useToast();
-    const { refreshUser } = useAuth();
 
+    // UI State
+    const [saving, setSaving] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
     // Form State
     const [fullName, setFullName] = useState('');
     const [username, setUsername] = useState('');
@@ -27,20 +26,14 @@ export default function EditProfilePage() {
     const [photoUrl, setPhotoUrl] = useState('');
 
     useEffect(() => {
-        getCurrentUser().then(userData => {
-            if (!userData) {
-                router.push('/login');
-                return;
-            }
-            setUser(userData);
-            setFullName(userData.full_name || '');
-            setUsername(userData.username || '');
-            setBio(userData.bio || '');
-            setDepartment(userData.department || '');
-            setPhotoUrl(userData.profile_photo_url || '');
-            setLoading(false);
-        });
-    }, [router]);
+        if (!authLoading && user) {
+            setFullName(user.full_name || '');
+            setUsername(user.username || '');
+            setBio(user.bio || '');
+            setDepartment(user.department || '');
+            setPhotoUrl(user.profile_photo_url || '');
+        }
+    }, [user, authLoading]);
 
     const validateForm = (): boolean => {
         const newErrors: Record<string, string> = {};
@@ -102,7 +95,7 @@ export default function EditProfilePage() {
 
             // Handle specific errors
             if (msg.toLowerCase().includes('username')) {
-                setErrors(prev => ({ ...prev, username: msg }));
+                setErrors((prev: Record<string, string>) => ({ ...prev, username: msg }));
             }
 
             showToast(msg, "error");
@@ -111,7 +104,7 @@ export default function EditProfilePage() {
         }
     };
 
-    if (loading) {
+    if (authLoading) {
         return (
             <div className="p-8 text-center">
                 <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto"></div>
