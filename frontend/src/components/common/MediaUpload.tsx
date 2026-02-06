@@ -3,8 +3,8 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/context/ToastContext';
-import axios from 'axios';
-import api from '@/lib/api';
+import { storage, auth } from '@/lib/firebase';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 interface MediaUploadProps {
     onUploadComplete: (data: { url: string; public_id: string; type: string }) => void;
@@ -37,8 +37,9 @@ export default function MediaUpload({ onUploadComplete, onClear }: MediaUploadPr
             return;
         }
 
-        if (selectedFile.size > 10 * 1024 * 1024) {
-            showToast("File is too heavy! Max size allowed is 10MB.", "error");
+        if (selectedFile.size > 20 * 1024 * 1024) {
+            // Increased to 20MB for Firebase
+            showToast("File is too heavy! Max size allowed is 20MB.", "error");
             return;
         }
 
@@ -52,76 +53,56 @@ export default function MediaUpload({ onUploadComplete, onClear }: MediaUploadPr
         reader.readAsDataURL(selectedFile);
 
         // Auto-start upload once file is selected
-        uploadToCloudinary(selectedFile);
+        uploadToFirebase(selectedFile);
     };
 
-    const uploadToCloudinary = async (selectedFile: File) => {
+    const uploadToFirebase = async (selectedFile: File) => {
         setIsUploading(true);
         setUploadProgress(0);
 
         try {
-            // 1. Get Signature from our Backend (Orbit-Safe Logic)
-            const { data: signData } = await api.get('/media/signature');
+            const userId = auth.currentUser?.uid || 'anonymous';
+            const timestamp = Date.now();
+            const cleanFileName = selectedFile.name.replace(/[^a-zA-Z0-9.]/g, '_');
+            const storagePath = `uploads/${userId}/${timestamp}_${cleanFileName}`;
+            const storageRef = ref(storage, storagePath);
 
-            // --- Orbit-Mock Mode Fallback (If Backend isn't configured) ---
-            if (signData.mock) {
-                console.warn("Media service not configured. running in LIFT-OFF MOCK MODE.");
-                showToast("Dev Mode: Simulating upload...", "info");
+            const uploadTask = uploadBytesResumable(storageRef, selectedFile);
 
-                // Simulate orbital burn (progress)
-                for (let i = 0; i <= 100; i += 20) {
-                    setUploadProgress(i);
-                    await new Promise(r => setTimeout(r, 150));
-                }
+            uploadTask.on(
+                'state_changed',
+                (snapshot) => {
+                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    setUploadProgress(Math.round(progress));
+                },
+                (error) => {
+                    console.error("Firebase Storage Error:", error);
+                    showToast("Upload failed: " + error.message, "error");
+                    setIsUploading(false);
+                    setFile(null);
+                    setPreview(null);
+                },
+                async () => {
+                    // Upload completed successfully
+                    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
 
-                // Complete using the local preview URL as the hosted URL
-                onUploadComplete({
-                    url: preview || "",
-                    public_id: "mock_" + Date.now(),
-                    type: selectedFile.type.startsWith('video/') ? 'video' : 'image'
-                });
+                    onUploadComplete({
+                        url: downloadURL,
+                        public_id: storagePath, // Using storage path as public_id
+                        type: selectedFile.type.startsWith('video/') ? 'video' : 'image'
+                    });
 
-                showToast("Mock Stabilization Complete! (Dev Mode)", "success");
-                setIsUploading(false);
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('file', selectedFile);
-            formData.append('api_key', signData.api_key);
-            formData.append('timestamp', signData.timestamp);
-            formData.append('signature', signData.signature);
-            formData.append('folder', signData.folder);
-
-            // 2. Direct Upload to Cloudinary
-            const response = await axios.post(
-                `https://api.cloudinary.com/v1_1/${signData.cloud_name}/upload`,
-                formData,
-                {
-                    onUploadProgress: (progressEvent) => {
-                        const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 1));
-                        setUploadProgress(percentCompleted);
-                    }
+                    showToast("Media uploaded successfully!", "success");
+                    setIsUploading(false);
                 }
             );
 
-            const result = response.data;
-            onUploadComplete({
-                url: result.secure_url,
-                public_id: result.public_id,
-                type: result.resource_type // image or video
-            });
-
-            showToast("Media stabilized in orbit! (Upload Complete)", "success");
         } catch (error: any) {
-            console.error("Cloudinary upload failed", error);
-            const detail = error.response?.data?.detail || error.message || "Upload Error";
-
-            showToast(`Re-entry Failed! (${detail}). Try again.`, "error");
+            console.error("Upload setup failed", error);
+            showToast("Upload failed to start.", "error");
+            setIsUploading(false);
             setFile(null);
             setPreview(null);
-        } finally {
-            setIsUploading(false);
         }
     };
 
@@ -175,7 +156,7 @@ export default function MediaUpload({ onUploadComplete, onClear }: MediaUploadPr
                                 </svg>
                             </motion.div>
                             <span className="text-sm font-medium">Drag & Drop or Click to Upload</span>
-                            <span className="text-xs opacity-60">Images or Videos up to 10MB</span>
+                            <span className="text-xs opacity-60">Images or Videos up to 20MB</span>
                         </div>
                     </motion.div>
                 ) : (
@@ -241,8 +222,8 @@ export default function MediaUpload({ onUploadComplete, onClear }: MediaUploadPr
                         {/* Floating Status Indicator */}
                         {!isUploading && (
                             <div className="absolute bottom-2 left-2 px-3 py-1 bg-black/60 backdrop-blur rounded-full text-white text-[10px] font-bold tracking-widest uppercase border border-white/10 flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,1)]" />
-                                Staged for Orbit
+                                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse shadow-[0_0_8px_rgba(74,222,128,1)]" />
+                                Ready to Post
                             </div>
                         )}
                     </motion.div>

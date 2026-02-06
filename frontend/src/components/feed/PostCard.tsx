@@ -221,16 +221,22 @@ export default function PostCard({ post, currentUserId, currentUser, onDelete }:
                             src={post.media_url}
                             controls
                             className="w-full max-h-[500px] object-contain bg-black"
-                            poster={post.media_url.replace('.mp4', '.jpg')} // Cloudinary auto-poster attempt
+                            poster={post.media_url.replace('.mp4', '.jpg')}
                         />
                     ) : (
-                        <div className="relative w-full h-[400px]">
+                        <div className="relative w-full h-[500px] bg-black/5 dark:bg-black/40">
                             <Image
                                 src={post.media_url}
                                 alt={post.title}
                                 fill
-                                className="object-cover transition-transform duration-700 group-hover/media:scale-105"
-                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                className="object-cover opacity-50 blur-xl scale-110"
+                            />
+                            <Image
+                                src={post.media_url}
+                                alt={post.title}
+                                fill
+                                className="object-contain transition-transform duration-700 z-10"
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 75vw, 50vw"
                             />
                         </div>
                     )}
