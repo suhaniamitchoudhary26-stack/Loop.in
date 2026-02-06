@@ -22,6 +22,56 @@ import traceback
 
 # ...
 
+@router.get("/popular", response_model=List[Post])
+def get_popular_posts(
+    timeframe: str = "today", # today, week, month, all
+    skip: int = 0,
+    limit: int = 20,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
+    """
+    Trending Engine: Surfacing the most engaging posts based on community interaction.
+    Popularity = (Net Votes) + (Comments * 2) + (Shares * 3)
+    """
+    try:
+        query = db.query(PostModel)
+        
+        # Timeframe filtering
+        # Note: In a real system, we'd use DB-side time functions, 
+        # but for simplicity we calculate delta in Python.
+        now = datetime.utcnow()
+        if timeframe == "today":
+            query = query.filter(PostModel.created_at >= now - timedelta(days=1))
+        elif timeframe == "week":
+            query = query.filter(PostModel.created_at >= now - timedelta(days=7))
+        elif timeframe == "month":
+            query = query.filter(PostModel.created_at >= now - timedelta(days=30))
+            
+        # Popularity Weighting Logic
+        popularity_score = (PostModel.upvotes - PostModel.downvotes) + \
+                          (PostModel.comments_count * 2) + \
+                          (PostModel.share_count * 3)
+        
+        # We sort by popularity_score DESC, with Recency as tie-breaker
+        posts = query.options(joinedload(PostModel.author))\
+            .order_by(desc(popularity_score), PostModel.created_at.desc())\
+            .offset(skip).limit(limit).all()
+            
+        # Redaction for anonymous posts
+        for post in posts:
+            if post.is_anonymous:
+                if not current_user or current_user.role != "admin":
+                    post.author = None
+                    post.author_id = None
+                    
+        return posts
+        
+    except Exception as e:
+        print(f"ERROR in get_popular_posts: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/", response_model=List[Post])
 def read_posts(
     skip: int = 0, 
@@ -166,7 +216,10 @@ def create_post(
         },
         "author_id": None if new_post.is_anonymous else new_post.author.id,
         "is_anonymous": new_post.is_anonymous,
-        "tags": new_post.tags
+        "tags": new_post.tags,
+        "media_url": new_post.media_url,
+        "media_public_id": new_post.media_public_id,
+        "media_type": new_post.media_type
     }
     
     background_tasks.add_task(manager.broadcast, {

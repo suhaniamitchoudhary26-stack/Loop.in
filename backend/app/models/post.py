@@ -30,3 +30,8 @@ class Post(Base):
     type = Column(String, default="discussion") # discussion, question, announcement
     is_pinned = Column(Boolean, default=False)
     pinned_until = Column(DateTime, nullable=True)
+    
+    # Media Integration (Zero-Storage)
+    media_url = Column(String, nullable=True)
+    media_public_id = Column(String, nullable=True)
+    media_type = Column(String, nullable=True) # image, video

@@ -10,7 +10,10 @@ def create_post(db: Session, post: PostCreate, author_id: int = None):
         tags=post.tags,
         type=post.type,
         is_anonymous=post.is_anonymous,
-        author_id=author_id
+        author_id=author_id,
+        media_url=post.media_url,
+        media_public_id=post.media_public_id,
+        media_type=post.media_type
     )
     db.add(db_post)
     db.commit()

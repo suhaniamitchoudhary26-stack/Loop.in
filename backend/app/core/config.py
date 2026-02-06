@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     # Production Frontend URL for CORS
     FRONTEND_URL: str = "http://localhost:3000"
     
+    # Cloudinary (Zero-Storage Media)
+    CLOUDINARY_CLOUD_NAME: str = ""
+    CLOUDINARY_API_KEY: str = ""
+    CLOUDINARY_API_SECRET: str = ""
+    
     # Google OAuth
     GOOGLE_CLIENT_ID: str = ""
     GOOGLE_CLIENT_SECRET: str = ""

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Button from '@/components/common/Button';
 import { createPost } from '@/lib/api';
 import { useToast } from '@/context/ToastContext';
+import MediaUpload from '@/components/common/MediaUpload';
 
 interface CreatePostModalProps {
     isOpen: boolean;
@@ -21,6 +22,8 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
     const [tags, setTags] = useState('');
     const [isAnonymous, setIsAnonymous] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [mediaData, setMediaData] = useState<{ url: string; public_id: string; type: string } | null>(null);
+    const [isMediaUploading, setIsMediaUploading] = useState(false);
 
     const isFormValid = title.trim().length > 0 &&
         content.trim().length > 0 &&
@@ -45,7 +48,10 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
                 department,
                 type: postType,
                 tags,
-                is_anonymous: isAnonymous
+                is_anonymous: isAnonymous,
+                media_url: mediaData?.url,
+                media_public_id: mediaData?.public_id,
+                media_type: mediaData?.type
             });
 
             showToast("Post created successfully!", "success");
@@ -56,6 +62,7 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
             setDepartment('');
             setTags('');
             setIsAnonymous(false);
+            setMediaData(null);
             onClose();
         } catch (error: any) {
             console.error("Failed to create post", error);
@@ -208,6 +215,20 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
                             </p>
                         </div>
 
+                        {/* Media Upload (Antigravity Section) */}
+                        <div className="space-y-2">
+                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                Attach Media
+                            </label>
+                            <MediaUpload
+                                onUploadComplete={(data) => {
+                                    setMediaData(data);
+                                    setIsMediaUploading(false);
+                                }}
+                                onClear={() => setMediaData(null)}
+                            />
+                        </div>
+
                         {/* Content */}
                         <div>
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -291,7 +312,7 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
                             <Button
                                 variant="primary"
                                 onClick={handleSubmit}
-                                disabled={!isFormValid || isSubmitting}
+                                disabled={!isFormValid || isSubmitting || isMediaUploading}
                                 isLoading={isSubmitting}
                             >
                                 {isSubmitting ? 'Posting...' : 'Post'}

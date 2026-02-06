@@ -127,6 +127,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: int):
 
 # Notifications
 # Notifications
-from app.api import notifications, news
+from app.api import notifications, news, media
 app.include_router(notifications.router, prefix="/notifications", tags=["notifications"])
 app.include_router(news.router, prefix="/news", tags=["news"])
+app.include_router(media.router, prefix="/media", tags=["media"])

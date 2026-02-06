@@ -1,5 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Sora:wght@400;600;700;800&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500&display=swap');
 @import "tailwindcss";
+
 @variant dark (&:where(.dark, .dark *));
+
+/* Premium Typography Integration */
 
 :root {
   --background: #FAFAF7;
@@ -23,7 +27,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: 'Outfit', sans-serif;
+  --font-heading: 'Sora', sans-serif;
+  --font-serif: 'Libre Baskerville', serif;
   --font-mono: var(--font-geist-mono);
 
   /* Expose to Tailwind */
@@ -45,6 +51,20 @@
     100% {
       opacity: 1;
       transform: translate(-50%, -40%) scale(1);
+    }
+  }
+
+  @keyframes nebula-drift {
+    0% {
+      background-position: 0% 50%;
+    }
+
+    50% {
+      background-position: 100% 50%;
+    }
+
+    100% {
+      background-position: 0% 50%;
     }
   }
 }
@@ -129,10 +149,13 @@ body {
     radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
     radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.15) 0px, transparent 50%),
     radial-gradient(at 0% 100%, rgba(34, 197, 94, 0.15) 0px, transparent 50%);
+  background-size: 200% 200%;
+  animation: nebula-drift 20s ease infinite;
   background-attachment: fixed;
   color: var(--foreground);
   transition: background-color 0.3s ease, color 0.3s ease;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Outfit', sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 .dark body {
@@ -169,4 +192,91 @@ body.sidebar-open {
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Aura System Utilities */
+.aura-glow {
+  position: relative;
+}
+
+.aura-glow::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(45deg, var(--dept-cs), var(--dept-it), var(--dept-me));
+  filter: blur(8px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+  border-radius: inherit;
+}
+
+.aura-glow:hover::after {
+  opacity: 0.15;
+}
+
+.dark .aura-glow:hover::after {
+  opacity: 0.25;
+}
+
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-400;
+}
+
+.heading-sora {
+  font-family: 'Sora', sans-serif;
+}
+
+.content-serif {
+  font-family: 'Libre Baskerville', serif;
+}
+
+/* Scanline Filter for Ghost Mode */
+.scanline-filter {
+  position: relative;
+  overflow: hidden;
+}
+
+.scanline-filter::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 255, 255, 0.05) 3px,
+      rgba(255, 255, 255, 0.05) 3px);
+  background-size: 100% 4px;
+  animation: scanline 10s linear infinite;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes scanline {
+  0% {
+    transform: translateY(0);
+  }
+
+  100% {
+    transform: translateY(4px);
+  }
+}
+
+/* Unmask Dissolve Transition */
+.unmask-dissolve {
+  mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+  mask-size: 100% 200%;
+  animation: dissolve 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes dissolve {
+  0% {
+    mask-position: 0% 100%;
+    filter: blur(10px) brightness(2);
+  }
+
+  100% {
+    mask-position: 0% 0%;
+    filter: blur(0px) brightness(1);
+  }
 }

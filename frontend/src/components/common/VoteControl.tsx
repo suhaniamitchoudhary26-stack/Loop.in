@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '@/lib/api';
 
 interface VoteControlProps {
@@ -29,24 +30,18 @@ export default function VoteControl({
         if (loading) return;
         setLoading(true);
 
-        // Optimistic Update
         const previousState = { upvotes, downvotes, userVote };
-
-        // Calculate new state
         let newUpvotes = upvotes;
         let newDownvotes = downvotes;
         let newUserVote: 1 | -1 | null = type;
 
         if (userVote === type) {
-            // Toggle off
             newUserVote = null;
             if (type === 1) newUpvotes--;
             else newDownvotes--;
         } else {
-            // Switch or Add
-            if (userVote === 1) newUpvotes--; // Remove old upvote
-            if (userVote === -1) newDownvotes--; // Remove old downvote
-
+            if (userVote === 1) newUpvotes--;
+            if (userVote === -1) newDownvotes--;
             if (type === 1) newUpvotes++;
             else newDownvotes++;
         }
@@ -63,7 +58,6 @@ export default function VoteControl({
             });
             if (onVoteChange) onVoteChange(newUpvotes, newDownvotes, newUserVote);
         } catch (error) {
-            // Revert on error
             console.error("Vote failed", error);
             setUpvotes(previousState.upvotes);
             setDownvotes(previousState.downvotes);
@@ -76,35 +70,50 @@ export default function VoteControl({
     const iconSize = size === 'sm' ? 'w-4 h-4' : 'w-5 h-5';
     const netVotes = upvotes - downvotes;
 
+    const containerStyles = size === 'sm'
+        ? 'h-8 px-1'
+        : 'h-10 px-1.5';
+
     return (
-        <div className={`flex items-center bg-slate-100 dark:bg-slate-900/50 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 ${size === 'sm' ? 'h-7' : 'h-9'}`}>
-            <button
+        <div className={`flex items-center bg-white/40 dark:bg-slate-900/40 backdrop-blur-md rounded-xl border border-white/20 dark:border-white/5 shadow-sm group/vote ${containerStyles}`}>
+            <motion.button
+                whileHover={{ scale: 1.1, y: -2 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={() => handleVote(1)}
                 disabled={loading}
-                className={`flex items-center justify-center px-2 h-full hover:bg-slate-100 transition-colors ${userVote === 1 ? 'text-orange-600 bg-orange-50' : 'text-slate-500'}`}
-                title="Upvote"
+                className={`flex items-center justify-center p-1.5 rounded-lg transition-all ${userVote === 1 ? 'text-orange-500 bg-orange-500/10 shadow-[0_0_12px_rgba(249,115,22,0.3)]' : 'text-slate-400 hover:text-orange-400 hover:bg-orange-500/5'}`}
             >
-                <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className={iconSize} fill={userVote === 1 ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={userVote === 1 ? 2.5 : 2} d="M5 15l7-7 7 7" />
                 </svg>
-            </button>
+            </motion.button>
 
-            <span className={`px-1 text-sm font-bold min-w-[20px] text-center ${userVote === 1 ? 'text-orange-600' :
-                userVote === -1 ? 'text-blue-600' : 'text-slate-700'
-                }`}>
-                {netVotes}
-            </span>
+            <div className={`px-2 flex flex-col items-center justify-center min-w-[24px] overflow-hidden`}>
+                <AnimatePresence mode="wait">
+                    <motion.span
+                        key={netVotes}
+                        initial={{ y: 10, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: -10, opacity: 0 }}
+                        transition={{ duration: 0.15, ease: "easeOut" }}
+                        className={`text-sm font-black tracking-tight ${userVote === 1 ? 'text-orange-500' : userVote === -1 ? 'text-indigo-500' : 'text-slate-600 dark:text-slate-300'}`}
+                    >
+                        {netVotes}
+                    </motion.span>
+                </AnimatePresence>
+            </div>
 
-            <button
+            <motion.button
+                whileHover={{ scale: 1.1, y: 2 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={() => handleVote(-1)}
                 disabled={loading}
-                className={`flex items-center justify-center px-2 h-full hover:bg-slate-100 transition-colors ${userVote === -1 ? 'text-blue-600 bg-blue-50' : 'text-slate-500'}`}
-                title="Downvote"
+                className={`flex items-center justify-center p-1.5 rounded-lg transition-all ${userVote === -1 ? 'text-indigo-500 bg-indigo-500/10 shadow-[0_0_12px_rgba(99,102,241,0.3)]' : 'text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/5'}`}
             >
-                <svg className={iconSize} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className={iconSize} fill={userVote === -1 ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={userVote === -1 ? 2.5 : 2} d="M19 9l-7 7-7-7" />
                 </svg>
-            </button>
+            </motion.button>
         </div>
     );
 }

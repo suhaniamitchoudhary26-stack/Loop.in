@@ -66,7 +66,17 @@ api.interceptors.response.use(
   }
 );
 
-export const createPost = async (postData: { title: string; content: string; department: string; type: string; tags?: string; is_anonymous?: boolean }) => {
+export const createPost = async (postData: {
+  title: string;
+  content: string;
+  department: string;
+  type: string;
+  tags?: string;
+  is_anonymous?: boolean;
+  media_url?: string;
+  media_public_id?: string;
+  media_type?: string;
+}) => {
   const response = await api.post("/posts/", postData);
   return response.data;
 };
@@ -78,6 +88,18 @@ export const getPosts = async (skip = 0, limit = 10, department = 'ALL', tags?: 
   if (tags) params.tags = tags;
 
   const response = await api.get('/posts/', { params });
+  return response.data;
+};
+
+export const getPopularPosts = async (timeframe: string = "today", skip = 0, limit = 20) => {
+  const response = await api.get('/posts/popular', {
+    params: { timeframe, skip, limit }
+  });
+  return response.data;
+};
+
+export const getPost = async (postId: number) => {
+  const response = await api.get(`/posts/${postId}`);
   return response.data;
 };
 

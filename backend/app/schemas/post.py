@@ -13,6 +13,9 @@ class PostBase(BaseModel):
     type: str = "discussion"
     tags: Optional[str] = None
     is_anonymous: bool = False
+    media_url: Optional[str] = None
+    media_public_id: Optional[str] = None
+    media_type: Optional[str] = None # image, video
 
 class PostCreate(PostBase):
     pass
@@ -35,6 +38,10 @@ class Post(PostBase):
     comments_count: int = 0
     share_count: int = 0  # Track share popularity
     user_vote: Optional[int] = None # 1, -1, or None (if not voted)
+    
+    media_url: Optional[str] = None
+    media_public_id: Optional[str] = None
+    media_type: Optional[str] = None
     
     # Validator removed to handle redaction in API (for Admin Unmasking)
 

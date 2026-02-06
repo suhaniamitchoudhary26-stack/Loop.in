@@ -37,6 +37,9 @@ export interface Post {
     user_vote?: 1 | -1 | null; // Current user's vote
     is_pinned?: boolean;
     pinned_until?: string | null;
+    media_url?: string;
+    media_public_id?: string;
+    media_type?: string;
 }
 
 export interface Comment {

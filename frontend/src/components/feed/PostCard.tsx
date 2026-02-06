@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Post } from '@/types';
 import UserAvatar from '@/components/common/UserAvatar';
@@ -59,25 +60,19 @@ export default function PostCard({ post, currentUserId, currentUser, onDelete }:
 
 
 
-    // Department Color Map
     const deptColors: Record<string, string> = {
-        'CS': '0, 255, 255', // Cyan
-        'EE': '255, 165, 0', // Orange
-        'ME': '59, 130, 246', // Blue
-        'CE': '225, 29, 72', // Rose
-        'IT': '147, 51, 234', // Purple
-        'GENERAL': '148, 163, 184' // Slate
+        'CS': '13, 148, 136', // Teal-600
+        'EE': '217, 119, 6', // Amber-600
+        'ME': '59, 130, 246', // Blue-500
+        'CE': '190, 18, 60', // Rose-700
+        'IT': '126, 34, 206', // Purple-700
+        'GENERAL': '100, 116, 139' // Slate-500
     };
     const deptColor = deptColors[post.department || 'GENERAL'] || deptColors['GENERAL'];
 
     const isAdmin = currentUser?.role === 'admin';
-    // Admin Override: If admin, they can clean up anything
     const canDelete = (currentUserId && post.author_id === currentUserId) || isAdmin;
-
     const isAnonymous = post.is_anonymous;
-
-    // Antigravity Unmasking Logic
-    // If Admin, and author data is present (backend sent it), show it with indicator.
     const isUnmasked = isAnonymous && isAdmin && post.author;
 
     let authorName = isAnonymous ? 'Anonymous Student' : (post.author?.full_name || post.author?.email?.split('@')[0] || 'Student');
@@ -100,16 +95,18 @@ export default function PostCard({ post, currentUserId, currentUser, onDelete }:
             exit={{ opacity: 0, scale: 0.9 }}
             whileHover={{ y: -6, scale: 1.01 }}
             transition={{ type: "spring", stiffness: 100, damping: 15 }}
-            className={`relative bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl p-6 md:p-8 rounded-3xl border transition-all duration-300 group ${isUnmasked ? 'border-red-500/30' : 'border-white/40 dark:border-white/5'}`}
+            className={`relative aura-glow bg-white/70 dark:bg-slate-900/60 backdrop-blur-2xl p-6 md:p-8 rounded-[2rem] border transition-all duration-500 group ${isUnmasked ? 'border-red-500/40 shadow-[0_0_20px_rgba(239,68,68,0.1)]' : 'border-white/40 dark:border-white/5'}`}
             style={{
-                boxShadow: `0 0 0 1px rgba(255,255,255,0.1), 0 8px 30px -6px rgba(0,0,0,0.1)`
-            }}
+                // @ts-ignore
+                '--post-accent': `rgb(${deptColor})`,
+                boxShadow: `0 0 0 1px rgba(255,255,255,0.05), 0 20px 50px -12px rgba(0,0,0,0.15)`
+            } as any}
         >
-            {/* Dynamic Glow Element - visible on hover */}
+            {/* Reactive Glow Element */}
             <div
-                className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                className="absolute inset-0 rounded-[2rem] opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
                 style={{
-                    boxShadow: `0 20px 40px -10px rgba(${deptColor}, 0.15), 0 0 20px -5px rgba(${deptColor}, 0.1)`
+                    boxShadow: `0 20px 40px -10px rgba(${deptColor}, 0.12), 0 0 20px -5px rgba(${deptColor}, 0.08)`
                 }}
             />
 
@@ -130,7 +127,7 @@ export default function PostCard({ post, currentUserId, currentUser, onDelete }:
                 {/* Author Info */}
                 <div className="flex items-center gap-3">
                     {/* Avatar with Ghost Mode blur effect */}
-                    <div className={`relative ${isAnonymous ? 'filter blur-[1px] opacity-60' : ''}`}>
+                    <div className={`relative ${isAnonymous ? 'filter blur-[1px] opacity-60' : ''} ${isUnmasked ? 'unmask-dissolve' : ''}`}>
                         {isAnonymous ? (
                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-200 to-slate-400 dark:from-slate-700 dark:to-slate-900 flex items-center justify-center border border-slate-300 dark:border-slate-600 backdrop-blur-sm shadow-inner">
                                 <svg className="w-5 h-5 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -146,8 +143,8 @@ export default function PostCard({ post, currentUserId, currentUser, onDelete }:
                         )}
                     </div>
 
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center flex-wrap gap-2 text-sm font-bold text-slate-900 dark:text-white tracking-tight">
+                    <div className={`flex-1 min-w-0 ${isUnmasked ? 'unmask-dissolve' : ''}`}>
+                        <div className="flex items-center flex-wrap gap-2 text-sm font-bold text-slate-900 dark:text-white tracking-tight heading-sora">
                             <span>{authorName}</span>
                             {authorUsername && (
                                 <span className="text-slate-500 dark:text-slate-400 font-medium opacity-80">@{authorUsername}</span>
@@ -206,15 +203,41 @@ export default function PostCard({ post, currentUserId, currentUser, onDelete }:
 
             {/* Post Content */}
             <div className="mb-6 relative z-10">
-                <Link href={`/posts/${post.id}`} className="group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                    <h2 className="text-2xl font-serif font-black text-slate-900 dark:text-white mb-3 leading-tight tracking-tight drop-shadow-sm">
+                <Link href={`/posts/${post.id}`} className="hover:opacity-90 transition-opacity">
+                    <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-3 leading-tight tracking-tight heading-sora">
                         <TruncatedText text={post.title} maxLength={60} />
                     </h2>
                 </Link>
-                <p className="text-[1.0625rem] text-slate-800 dark:text-slate-100 leading-[1.75] font-light whitespace-pre-wrap">
+                <p className="text-[1.125rem] text-slate-800 dark:text-slate-200 leading-[1.8] font-normal content-serif whitespace-pre-wrap">
                     {post.content}
                 </p>
             </div>
+
+            {/* Antigravity Media Display */}
+            {post.media_url && (
+                <div className={`mb-6 relative rounded-2xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-md shadow-2xl group/media transition-all duration-500 hover:shadow-[0_0_30px_var(--post-accent)] ${isAnonymous ? 'grayscale blur-[2px] opacity-70 group-hover:grayscale-0 group-hover:blur-0 group-hover:opacity-100 scanline-filter' : ''}`}>
+                    {post.media_type === 'video' ? (
+                        <video
+                            src={post.media_url}
+                            controls
+                            className="w-full max-h-[500px] object-contain bg-black"
+                            poster={post.media_url.replace('.mp4', '.jpg')} // Cloudinary auto-poster attempt
+                        />
+                    ) : (
+                        <div className="relative w-full h-[400px]">
+                            <Image
+                                src={post.media_url}
+                                alt={post.title}
+                                fill
+                                className="object-cover transition-transform duration-700 group-hover/media:scale-105"
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                            />
+                        </div>
+                    )}
+                    {/* Spectral Overlay for Media */}
+                    <div className="absolute inset-0 pointer-events-none ring-1 ring-inset ring-white/10 rounded-2xl" />
+                </div>
+            )}
 
             {/* Tags */}
             {post.tags && (
