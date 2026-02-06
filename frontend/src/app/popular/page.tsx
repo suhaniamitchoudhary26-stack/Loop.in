@@ -7,14 +7,12 @@ import { Post } from '@/types';
 import PostCard from '@/components/feed/PostCard';
 import PostSkeleton from '@/components/feed/PostSkeleton';
 import EmptyState from '@/components/common/EmptyState';
-import AnnouncementsWidget from '@/components/feed/AnnouncementsWidget';
-import HeroSection from '@/components/feed/HeroSection';
 
 const timeframes = [
-    { id: 'today', label: 'Today' },
-    { id: 'week', label: 'This Week' },
-    { id: 'month', label: 'This Month' },
-    { id: 'all', label: 'All Time' },
+    { id: 'today', label: 'Today', icon: '🕒' },
+    { id: 'week', label: 'This Week', icon: '📅' },
+    { id: 'month', label: 'This Month', icon: '🌙' },
+    { id: 'all', label: 'All Time', icon: '✨' },
 ];
 
 export default function PopularPage() {
@@ -52,80 +50,100 @@ export default function PopularPage() {
     };
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 items-start">
-            {/* Left Column: Feed */}
-            <div className="space-y-6">
-
-                {/* Sticky Page Header with Glassmorphism */}
-                <header className="sticky top-0 z-30 flex items-center justify-between gap-4 px-1 py-4 -mx-1 mb-6 bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-transparent transition-all duration-300">
-                    <div className="flex-1 min-w-0">
-                        <h1 className="text-2xl font-black tracking-tighter text-slate-900 dark:text-slate-100">
-                            🔥 Trending
-                        </h1>
-                        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                            Most active discussions on campus
-                        </p>
-                    </div>
-                </header>
-
-                {/* Clean Pill Filters */}
-                <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                    {timeframes.map((tf) => (
-                        <button
-                            key={tf.id}
-                            onClick={() => setTimeframe(tf.id)}
-                            className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all duration-200 whitespace-nowrap ${timeframe === tf.id
-                                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-lg shadow-slate-900/20'
-                                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800'
-                                }`}
-                        >
-                            {tf.label}
-                        </button>
+        <div className="space-y-8 max-w-4xl mx-auto pb-20">
+            {/* Trending Header */}
+            <header className="relative py-12 px-8 overflow-hidden rounded-[3rem] bg-gradient-to-br from-orange-500/10 via-rose-500/5 to-transparent border border-white/20 backdrop-blur-md shadow-2xl">
+                {/* Animated Embers */}
+                <div className="absolute inset-0 pointer-events-none">
+                    {[...Array(6)].map((_, i) => (
+                        <motion.div
+                            key={i}
+                            initial={{ x: Math.random() * 100 + "%", y: "110%", opacity: 0 }}
+                            animate={{
+                                y: "-10%",
+                                opacity: [0, 0.5, 0],
+                                rotate: [0, 45, -45]
+                            }}
+                            transition={{
+                                duration: Math.random() * 5 + 3,
+                                repeat: Infinity,
+                                delay: Math.random() * 5
+                            }}
+                            className="absolute w-2 h-2 rounded-full bg-orange-400 blur-sm"
+                        />
                     ))}
                 </div>
 
-                {/* Content Feed */}
-                <div className="space-y-6 min-h-[500px]">
-                    {isLoading ? (
-                        <PostSkeleton count={3} />
-                    ) : (
-                        <AnimatePresence mode="popLayout">
-                            {posts.length > 0 ? (
-                                <div className="space-y-6">
-                                    {posts.map((post, index) => (
-                                        <motion.div
-                                            key={post.id}
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, scale: 0.95 }}
-                                            transition={{ delay: index * 0.05 }}
-                                        >
-                                            <PostCard post={post} currentUserId={currentUserId} />
-                                        </motion.div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    className="py-12"
-                                >
-                                    <EmptyState
-                                        icon="📈"
-                                        title="No Trending Posts"
-                                        description="It's quiet right now. Be the first to start a conversation!"
-                                    />
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    )}
+                <div className="relative z-10 flex items-center gap-6">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-orange-500 to-rose-600 flex items-center justify-center shadow-lg shadow-orange-500/30 animate-pulse">
+                        <span className="text-4xl">🔥</span>
+                    </div>
+                    <div>
+                        <h1 className="text-5xl font-black text-slate-900 dark:text-white heading-sora tracking-tighter mb-2">
+                            Trending Discussions
+                        </h1>
+                        <p className="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-sm opacity-80">
+                            Discover the most impactful orbits on campus
+                        </p>
+                    </div>
                 </div>
+            </header>
+
+            {/* Time Filter System */}
+            <div className="flex flex-wrap items-center gap-3 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl p-2 rounded-2xl border border-white/20 dark:border-white/5 sticky top-24 z-40 shadow-xl mx-4 md:mx-0">
+                {timeframes.map((tf) => (
+                    <motion.button
+                        key={tf.id}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => setTimeframe(tf.id)}
+                        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-black text-sm transition-all duration-300 ${timeframe === tf.id
+                            ? 'bg-gradient-to-tr from-orange-500 to-rose-500 text-white shadow-[0_0_20px_rgba(249,115,22,0.4)] scale-105'
+                            : 'text-slate-500 dark:text-slate-400 hover:bg-white/60 dark:hover:bg-slate-800'
+                            }`}
+                    >
+                        <span className="text-lg">{tf.icon}</span>
+                        {tf.label}
+                    </motion.button>
+                ))}
             </div>
 
-            {/* Right Column: Widgets */}
-            <aside className="hidden lg:block w-full mt-16 space-y-6">
-                <AnnouncementsWidget />
-            </aside>
+            {/* Content Feed */}
+            <div className="space-y-8">
+                {isLoading ? (
+                    <PostSkeleton count={3} />
+                ) : (
+                    <AnimatePresence mode="popLayout">
+                        {posts.length > 0 ? (
+                            <div className="grid grid-cols-1 gap-8">
+                                {posts.map((post, index) => (
+                                    <motion.div
+                                        key={post.id}
+                                        initial={{ opacity: 0, y: 30 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.95 }}
+                                        transition={{ delay: index * 0.1 }}
+                                    >
+                                        <PostCard post={post} currentUserId={currentUserId} />
+                                    </motion.div>
+                                ))}
+                            </div>
+                        ) : (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="py-20"
+                            >
+                                <EmptyState
+                                    icon="☄️"
+                                    title="Celestial Silence"
+                                    description="No trending posts found in this timeframe. Be the spark that starts a fire!"
+                                />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                )}
+            </div>
         </div>
     );
 }
