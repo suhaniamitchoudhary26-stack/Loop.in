@@ -28,6 +28,16 @@ services:
         sync: false  # User must paste JSON content here manually
       - key: FRONTEND_URL
         sync: false # Manual entry required due to circular dependency with frontend
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REDIRECT_URI
+        sync: false # Set to your production URL + /auth/callback
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 30
 
   # Frontend
   - type: web
