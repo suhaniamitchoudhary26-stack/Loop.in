@@ -27,10 +27,7 @@ services:
       - key: FIREBASE_CREDENTIALS_JSON
         sync: false  # User must paste JSON content here manually
       - key: FRONTEND_URL
-        fromService:
-          type: web
-          name: loop-frontend
-          property: url
+        sync: false # Manual entry required due to circular dependency with frontend
 
   # Frontend
   - type: web
