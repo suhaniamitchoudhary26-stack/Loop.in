@@ -83,11 +83,10 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins if settings.FRONTEND_URL != "http://localhost:3000" else ["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"],
 )
 
 
