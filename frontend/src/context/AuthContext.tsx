@@ -88,6 +88,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, [loading, firebaseUser, isProtected, router]);
 
+    // Global Loading State (Prevents race conditions)
+    if (loading) {
+        return (
+            <div className="flex h-screen w-full items-center justify-center bg-white dark:bg-slate-950">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="relative h-12 w-12">
+                        <div className="absolute inset-0 rounded-full border-4 border-slate-200 dark:border-slate-800"></div>
+                        <div className="absolute inset-0 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"></div>
+                    </div>
+                    {/* <p className="text-sm font-medium text-slate-500 dark:text-slate-400 animate-pulse">
+                        Initializing...
+                    </p> */}
+                </div>
+            </div>
+        );
+    }
+
     return (
         <AuthContext.Provider value={{ user, firebaseUser, loading, logout, refreshUser }}>
             {children}
