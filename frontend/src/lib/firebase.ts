@@ -31,7 +31,6 @@ if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "undefined") {
     googleProvider = new GoogleAuthProvider();
 
     // Configure auth persistence to LOCAL (survives page reloads and browser restarts)
-    // Configure auth persistence to LOCAL (survives page reloads and browser restarts)
     if (typeof window !== 'undefined') {
         setPersistence(auth, browserLocalPersistence).catch((error) => {
             console.error("Failed to set auth persistence:", error);
@@ -49,8 +48,4 @@ if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "undefined") {
     googleProvider = {} as any;
 }
 
-// Initialize Storage
-import { getStorage } from "firebase/storage";
-const storage = app ? getStorage(app) : {} as any;
-
-export { app, auth, googleProvider, storage };
+export { app, auth, googleProvider };
