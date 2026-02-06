@@ -28,6 +28,16 @@ export default function LoginPage() {
             router.push('/');
         } catch (err: any) {
             console.error("Google Login Error:", err);
+            if (err.code === 'auth/popup-blocked') {
+                try {
+                    await import('firebase/auth').then((module) => {
+                        return module.signInWithRedirect(auth, googleProvider);
+                    });
+                    return;
+                } catch (redirectErr: any) {
+                    setError(redirectErr.message || 'Google login via redirect failed.');
+                }
+            }
             setError(err.message || 'Google login failed.');
             setGoogleLoading(false);
         }
